@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('publisher-sdk-release.aar'))

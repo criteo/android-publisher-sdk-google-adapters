@@ -23,6 +23,15 @@ allprojects {
     }
 }
 
+task copyArtifacts(type: DefaultTask){
+    description = 'Copy artifacts for publisher-sdk'
+    doLast{
+        exec{
+            commandLine 'sh', 'scripts/build.sh'
+        }
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

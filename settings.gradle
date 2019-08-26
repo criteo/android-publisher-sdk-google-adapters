@@ -1,1 +1,1 @@
-//include ':publisher-sdk'  //TODO: Set correct module name when sources are added to this repo
+include ':mediation', ':publisher-sdk-release'
