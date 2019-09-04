@@ -42,6 +42,9 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
         INTERSTITIAL
     }
 
+    /**
+     * The app requested a banner ad
+     */
     @Override
     public void requestBannerAd(Context context,
             CustomEventBannerListener listener,
@@ -67,14 +70,17 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
                 listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
             }
 
-        } catch (JSONException | CriteoInitException e) {
+        } catch (JSONException | CriteoInitException ex) {
             listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-            Log.e(TAG, "Adapter failed to initialize: " + e.getMessage());
+            Log.e(TAG, "Adapter failed to initialize: " + ex.getMessage());
         }
 
 
     }
 
+    /**
+     * The app requested an interstitial ad
+     */
     @Override
     public void requestInterstitialAd(Context context,
             CustomEventInterstitialListener listener,
@@ -102,9 +108,9 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
                 listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
             }
 
-        } catch (JSONException | CriteoInitException e) {
+        } catch (JSONException | CriteoInitException ex) {
             listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-            Log.e(TAG, "Adapter failed to initialize: " + e.getMessage());
+            Log.e(TAG, "Adapter failed to initialize: " + ex.getMessage());
         }
 
     }
@@ -118,8 +124,7 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
     }
 
     private boolean initialize(Context context, String serverParameter, AdSize size,
-            FormatType formatType)
-            throws JSONException, CriteoInitException {
+            FormatType formatType) throws JSONException, CriteoInitException {
         JSONObject parameters = new JSONObject(serverParameter);
         String criteoPublisherId = parameters.getString(CRITEO_PUBLISHER_ID);
         String adUnitId = parameters.getString(AD_UNIT_ID);
@@ -155,7 +160,6 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
      */
     @Override
     public void onPause() {
-        // The sample ad network doesn't have an onPause method, so it does nothing.
     }
 
     /**
@@ -164,6 +168,5 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
      */
     @Override
     public void onResume() {
-        // The sample ad network doesn't have an onResume method, so it does nothing.
     }
 }

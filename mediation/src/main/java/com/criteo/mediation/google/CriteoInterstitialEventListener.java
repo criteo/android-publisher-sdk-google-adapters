@@ -17,11 +17,6 @@ public class CriteoInterstitialEventListener implements CriteoInterstitialAdList
     }
 
     @Override
-    public void onAdReceived() {
-
-    }
-
-    @Override
     public void onAdFailedToReceive(CriteoErrorCode code) {
         switch (code) {
             case ERROR_CODE_INTERNAL_ERROR:
@@ -67,5 +62,9 @@ public class CriteoInterstitialEventListener implements CriteoInterstitialAdList
     @Override
     public void onAdFailedToDisplay(CriteoErrorCode code) {
         customEventInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_NETWORK_ERROR);
+    }
+
+    @Override
+    public void onAdReceived() {
     }
 }
