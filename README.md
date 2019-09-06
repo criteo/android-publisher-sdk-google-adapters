@@ -1,5 +1,5 @@
 # Criteo Adapters for Google Mediation (Android)
-This repository contains Criteo’s Adapter for Admob Mediation. It has to be used in conjunction with the Criteo Publisher SDK. For requirements, intructions and other info, see [Integrating Criteo with Admob Mediation](https://publisherdocs.criteotilt.com/sdk-android/3.1/admob-mediation/).
+This repository contains Criteo’s Adapter for Admob Mediation. It must be used in conjunction with the Criteo Publisher SDK. For requirements, intructions, and other info, see [Integrating Criteo with Admob Mediation](https://publisherdocs.criteotilt.com/sdk-android/3.1/admob-mediation/).
 
 
 License
