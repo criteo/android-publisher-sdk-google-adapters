@@ -20,8 +20,8 @@
 </plugins>
 </build>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.google.ads.mediation</groupId>
-  <artifactId>criteo</artifactId>
+  <groupId>com.criteo.mediation.google</groupId>
+  <artifactId>Criteo-adapter</artifactId>
   <version>1.0.0</version>
   <packaging>aar</packaging>
   <description>POM was created from install:install-file</description>
