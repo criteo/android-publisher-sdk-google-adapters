@@ -1,6 +1,20 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
+/**
+ * Current adapter version
+ *
+ * The three first digits correspond to the version of the PublisherSDK that is linked to this adapter.
+ * The last digit is an incremental version of this adapter for this PublisherSDK version.
+ *
+ * This means, that every time a new PublisherSDK is deployed (version A.B.C), then a new adapter should be
+ * deployed as well with version A.B.C.0. If fixes, or updates are required on the adapter without updating
+ * the SDK, then the last digit is incremented to produce A.B.C.1, then A.B.C.2, ...
+ */
+version = "3.4.0.0"
+
+def sdk_version = version.substring(0, version.lastIndexOf('.'))
+
 def support_version = "27.0.1"
 
 android {
@@ -11,7 +25,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 27
         versionCode 1
-        versionName "1.0.0"
+        versionName "$version"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -46,12 +60,68 @@ configurations.all {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
+    //  relying on the master branch.
+    implementation project(path: ':publisher-sdk-release')
+
+    // TODO EE-925 Update this dependency to check that the adapter is still working.
+    implementation 'com.google.android.gms:play-services-ads:15.0.0'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation 'com.google.android.gms:play-services-ads:15.0.0'
-    androidTestCompile 'org.mockito:mockito-android:2.7.22'
-    implementation project(path: ':publisher-sdk-release')
+    androidTestImplementation 'org.mockito:mockito-android:2.7.22'
 }
 
+task packageAarRelease(type: Zip, dependsOn: 'bundleRelease') {
+    from file("$buildDir/outputs/aar/mediation-release.aar")
+    extension "aar"
+}
+
+def azureLocalRepository = "${buildDir}/azure-${version}"
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = "com.criteo.mediation.google"
+            artifactId = "criteo-adapter"
+            artifact packageAarRelease
+
+            pom {
+                packaging = "aar"
+
+                withXml {
+                    def dependenciesNode = asNode().appendNode("dependencies")
+
+                    def dependencyNode = dependenciesNode.appendNode("dependency")
+                    dependencyNode.appendNode("groupId", "com.criteo.publisher")
+                    dependencyNode.appendNode("artifactId", "criteo-publisher-sdk")
+                    dependencyNode.appendNode("version", "$sdk_version")
+                    dependencyNode.appendNode("type", "aar")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            // TODO EE-915 Find a way to make the upload from Gradle rather than relying on bash script
+            name = "azure"
+            url = "file://${azureLocalRepository}"
+        }
+    }
+}
+
+task uploadToAzure {
+    doLast {
+        exec {
+            commandLine "bash", "../scripts/publish-to-azure.sh", "${azureLocalRepository}"
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository).all {
+    if (name.contains("Azure")) {
+        it.finalizedBy uploadToAzure
+    }
+}
