@@ -11,7 +11,7 @@ apply plugin: 'maven-publish'
  * deployed as well with version A.B.C.0. If fixes, or updates are required on the adapter without updating
  * the SDK, then the last digit is incremented to produce A.B.C.1, then A.B.C.2, ...
  */
-version = "3.4.0.0"
+version = "3.5.0.0"
 
 def sdk_version = version.substring(0, version.lastIndexOf('.'))
 
