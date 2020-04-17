@@ -20,6 +20,7 @@ allprojects {
         google()
         jcenter()
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
+        maven { url "http://nexus.criteo.prod/content/groups/android/" }
     }
 }
 
@@ -30,10 +31,6 @@ task copyArtifacts(type: DefaultTask){
             commandLine 'sh', 'scripts/build.sh'
         }
     }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
 }
 
 // Share publication configuration for subProjects

@@ -15,8 +15,6 @@ version = "3.4.0.0"
 
 def sdk_version = version.substring(0, version.lastIndexOf('.'))
 
-def support_version = "27.0.1"
-
 android {
     buildToolsVersion '27.0.3'
     compileSdkVersion 27
@@ -52,25 +50,33 @@ android {
 
 configurations.all {
     resolutionStrategy {
-        force "com.android.support:support-annotations:$support_version"
-        force "com.android.support:support-v4:$support_version"
-        force "com.android.support:asynclayoutinflater:$support_version"
-        force "com.android.support:customtabs:$support_version"
+        force "com.android.support:support-core-utils:27.0.1"
     }
 }
 
 dependencies {
-    // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
-    //  relying on the master branch.
-    implementation project(path: ':publisher-sdk-release')
+    def useLocalPublisherSdk = false
+    if (useLocalPublisherSdk) {
+        implementation(project(path: ":publisher-sdk-release"))
+    } else {
+        // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
+        //  relying on dynamic version.
+        implementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version-+")
+    }
 
     // TODO EE-925 Update this dependency to check that the adapter is still working.
-    implementation 'com.google.android.gms:play-services-ads:15.0.0'
+    compileOnly("com.google.android.gms:play-services-ads:15.0.0") {
+        exclude(group: "com.android.support")
+    }
 
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    androidTestImplementation 'org.mockito:mockito-android:2.7.22'
+    testImplementation("junit:junit:4.12")
+
+    androidTestImplementation("com.android.support.test:runner:1.0.2")
+    androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
+    androidTestImplementation("org.mockito:mockito-android:2.7.22")
+    androidTestImplementation("com.google.android.gms:play-services-ads:15.0.0") {
+        exclude(group: "com.android.support")
+    }
 }
 
 task packageAarRelease(type: Zip, dependsOn: 'bundleRelease') {
