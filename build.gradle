@@ -19,6 +19,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mavenLocal()
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
         maven { url "http://nexus.criteo.prod/content/groups/android/" }
     }

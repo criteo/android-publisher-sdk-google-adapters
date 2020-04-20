@@ -4,7 +4,9 @@ import com.criteo.publisher.Criteo;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-class CriteoHelper {
+public class CriteoHelper {
+
+  public static final String TEST_CP_ID = "B-000001";
 
   /**
    * The Criteo SDK is a singleton that contains some cached data.
@@ -22,7 +24,7 @@ class CriteoHelper {
    *  Maybe could we put this kind of method in a dedicated internal dependency.
    *  Then, test relying on internal introspection could just use that dependency.
    */
-  static void givenNotInitializedCriteo() throws ReflectiveOperationException {
+  public static void givenNotInitializedCriteo() throws ReflectiveOperationException {
     Field[] fields = Criteo.class.getDeclaredFields();
     Field singletonField = null;
     for (Field field : fields) {

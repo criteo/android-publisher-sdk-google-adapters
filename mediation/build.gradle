@@ -20,7 +20,7 @@ android {
     compileSdkVersion 27
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 16
         targetSdkVersion 27
         versionCode 1
         versionName "$version"
@@ -48,11 +48,7 @@ android {
 
 }
 
-configurations.all {
-    resolutionStrategy {
-        force "com.android.support:support-core-utils:27.0.1"
-    }
-}
+def support_version = "27.0.1"
 
 dependencies {
     def useLocalPublisherSdk = false
@@ -61,8 +57,10 @@ dependencies {
     } else {
         // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
         //  relying on dynamic version.
-        implementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version-+")
+        implementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
     }
+
+    compileOnly("com.android.support:support-annotations:$support_version")
 
     // TODO EE-925 Update this dependency to check that the adapter is still working.
     compileOnly("com.google.android.gms:play-services-ads:15.0.0") {
