@@ -31,6 +31,10 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 def support_version = "27.0.1"
@@ -42,7 +46,8 @@ dependencies {
     } else {
         // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
         //  relying on dynamic version.
-        implementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
+        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
+        debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
     }
 
     compileOnly("com.android.support:support-annotations:$support_version")
@@ -53,10 +58,12 @@ dependencies {
     }
 
     testImplementation("junit:junit:4.12")
+    testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+")
 
     androidTestImplementation("com.android.support.test:runner:1.0.2")
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
     androidTestImplementation("org.mockito:mockito-android:2.7.22")
+    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+")
     androidTestImplementation("com.google.android.gms:play-services-ads:15.0.0") {
         exclude(group: "com.android.support")
     }
