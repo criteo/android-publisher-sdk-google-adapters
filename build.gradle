@@ -36,21 +36,63 @@ task copyArtifacts(type: DefaultTask){
 
 // Share publication configuration for subProjects
 ext {
-    publishVersion = project.findProperty('version') ?: 'undefined'
-    publishRepositoryConfig = {
-        if (!project.hasProperty('publishUrl')) {
-            project.ext.set('publishUrl', 'http://nexus.criteo.preprod/content/repositories/criteo.android.releases/')
-        }
+    /**
+     * Current adapter version
+     *
+     * The three first digits correspond to the version of the PublisherSDK that is linked to this adapter.
+     * The last digit is an incremental version of this adapter for this PublisherSDK version.
+     *
+     * This means, that every time a new PublisherSDK is deployed (version A.B.C), then a new adapter should be
+     * deployed as well with version A.B.C.0. If fixes, or updates are required on the adapter without updating
+     * the SDK, then the last digit is incremented to produce A.B.C.1, then A.B.C.2, ...
+     */
+    def adapter_base_version = "3.5.0.0"
+
+    adapter_version = properties["adapterVersion"] ?: adapter_base_version
+
+    def timestamp = new Date().format("yyyyMMdd.HHmm")
+    adapter_publication_version = properties["appendTimestamp"] == "true"
+            ? "${ext.adapter_version}-$timestamp"
+            : ext.adapter_version
+
+    sdk_version = ext.adapter_version.substring(0, ext.adapter_version.lastIndexOf('.'))
+
+    nexusPreProdRepository = {
         repositories {
             maven {
-                name 'Nexus'
-                url publishUrl
-                if (System.getenv('MAVEN_USER')) {
-                    credentials {
-                        username = System.getenv('MAVEN_USER')
-                        password = System.getenv('MAVEN_PASSWORD')
-                    }
-                }
+                name 'NexusPreProd'
+                url "http://nexus.criteo.preprod/content/repositories/criteo.android.releases/"
+                with mavenCredentialsIfPresent()
+            }
+        }
+    }
+
+    nexusProdRepository = {
+        repositories {
+            maven {
+                name 'NexusProd'
+                url "http://nexus.criteo.prod/content/repositories/criteo.android.releases/"
+                with mavenCredentialsIfPresent()
+            }
+        }
+    }
+
+    devRepository = {
+        repositories {
+            maven {
+                name = "Dev"
+                setUrl("file://${buildDir}/dev-${adapter_publication_version}")
+            }
+        }
+    }
+}
+
+def mavenCredentialsIfPresent() {
+    return {
+        if (System.getenv('MAVEN_USER')) {
+            credentials {
+                username = System.getenv('MAVEN_USER')
+                password = System.getenv('MAVEN_PASSWORD')
             }
         }
     }
