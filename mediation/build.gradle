@@ -64,11 +64,6 @@ dependencies {
     }
 }
 
-task packageAarRelease(type: Zip, dependsOn: 'bundleRelease') {
-    from file("$buildDir/outputs/aar/mediation-release.aar")
-    extension "aar"
-}
-
 def azureLocalRepository = "${buildDir}/azure-${adapter_publication_version}"
 
 publishing {
@@ -76,8 +71,11 @@ publishing {
         release(MavenPublication) {
             groupId = "com.criteo.mediation.google"
             artifactId = "criteo-adapter"
-            artifact packageAarRelease
             version adapter_publication_version
+
+            artifact("$buildDir/outputs/aar/mediation-release.aar") {
+                builtBy(tasks["bundleRelease"])
+            }
 
             pom {
                 packaging = "aar"
