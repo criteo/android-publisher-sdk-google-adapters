@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep class com.criteo.mediation.google.CriteoAdapter {
+  public *;
+  protected *;
+}
