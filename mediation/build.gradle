@@ -40,15 +40,10 @@ android {
 def support_version = "27.0.1"
 
 dependencies {
-    def useLocalPublisherSdk = false
-    if (useLocalPublisherSdk) {
-        implementation(project(path: ":publisher-sdk-release"))
-    } else {
-        // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
-        //  relying on dynamic version.
-        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
-        debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
-    }
+    // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
+    //  relying on dynamic version.
+    releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
+    debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
 
     compileOnly("com.android.support:support-annotations:$support_version")
 

@@ -1,1 +1,1 @@
-include ':mediation', ':publisher-sdk-release'
+include ':mediation'

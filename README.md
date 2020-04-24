@@ -5,18 +5,24 @@ adapter against a local SDK. You can:
 
 ## Deploy your own debug SDK in your local maven repository
 
-TODO
-
-## Use a locally built version of the SDK.
-
-The `copyArtifacts` gradle task fetch the SDK from the master on Gerrit and build it.
-You just need to run:
+To use a local SDK as a dependency in this adapter project, you need to publish your local SDK in
+the maven local repository. You can then refresh your dependencies, the last version should be
+selected, and you will end up with your local version.
 
 ```shell script
-./gradlew copyArtifacts
+# Given the mochi folder is next to this adapter folder (and you are at the root of this adapter
+# folder)
+
+# You need to append the timestamp to differentiate your version against prod/preprod versions.
+# Moreover, this allows you to differentiate your own local versions.
+pushd ../mochi && ./gradlew clean publishToMavenLocal -PappendTimestamp=true && popd
+
+# It is published, you need to refresh the dependencies
+./gradlew clean build --refresh-dependencies
 ```
 
-Then you have to update the `useLocalPublisherSdk` variable in the `./mediation/build.gradle` file.
+If you want to go back on a preprod dependency, you need to clean your maven local repository
+(generally located at `~.m2/repository`), and refresh the dependencies.
 
 # Publishing the adapter
 
