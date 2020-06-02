@@ -28,7 +28,7 @@ If you want to go back on a preprod dependency, you need to clean your maven loc
 
 ## Bumping the version number
 
-The `version` should be bumped in the `mediation/build.gradle` file.
+The `adapter_base_version` should be bumped in the [project level build.gradle file](build.gradle).
 
 ## Building and publishing the adapter to the production repository
 
