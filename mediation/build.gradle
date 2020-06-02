@@ -2,16 +2,16 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
 android {
-    buildToolsVersion '27.0.3'
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 27
         versionCode 1
         versionName "$adapter_version"
+        multiDexEnabled true
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     lintOptions {
@@ -37,29 +37,30 @@ android {
     }
 }
 
-def support_version = "27.0.1"
-
 dependencies {
     // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
     //  relying on dynamic version.
     releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
     debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
 
-    compileOnly("com.android.support:support-annotations:$support_version")
+    compileOnly("androidx.annotation:annotation:1.0.0")
 
     // TODO EE-925 Update this dependency to check that the adapter is still working.
     compileOnly("com.google.android.gms:play-services-ads:15.0.0") {
         exclude(group: "com.android.support")
     }
 
+    implementation("androidx.multidex:multidex:2.0.1")
+
     testImplementation("junit:junit:4.12")
     testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
         exclude(group: "com.android.support")
     }
 
-    androidTestImplementation("com.android.support.test:runner:1.0.2")
-    androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
-    androidTestImplementation("org.mockito:mockito-android:2.7.22")
+    androidTestImplementation("androidx.test:runner:1.2.0")
+    androidTestImplementation("androidx.test:core:1.0.0")
+    androidTestImplementation("androidx.legacy:legacy-support-core-utils:1.0.0")
+    androidTestImplementation("org.mockito:mockito-android:3.3.0")
     androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
         exclude(group: "com.android.support")
     }
@@ -78,7 +79,9 @@ publishing {
             version adapter_publication_version
 
             artifact("$buildDir/outputs/aar/mediation-release.aar") {
-                builtBy(tasks["bundleRelease"])
+                afterEvaluate {
+                    builtBy(tasks["bundleReleaseAar"])
+                }
             }
 
             pom {

@@ -6,8 +6,8 @@ import static org.mockito.Mockito.mock;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import com.criteo.publisher.model.AdSize;
 import com.criteo.publisher.model.AdUnit;
 import com.criteo.publisher.model.BannerAdUnit;
@@ -24,7 +24,7 @@ public class AdapterHelper {
   private final CriteoAdapter adapter = new CriteoAdapter();
 
   @NonNull
-  private final Context context = InstrumentationRegistry.getContext();
+  private final Context context = ApplicationProvider.getApplicationContext();
 
   @NonNull
   private final MediationAdRequest mediationAdRequest = mock(MediationAdRequest.class);
