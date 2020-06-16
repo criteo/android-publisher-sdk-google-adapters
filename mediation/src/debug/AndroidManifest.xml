@@ -6,7 +6,7 @@
     https://developers.google.com/admob/android/quick-start#update_your_androidmanifestxml
     -->
     <meta-data
-      android:name="com.google.android.gms.ads.AD_MANAGER_APP"
-      android:value="true"/>
+      android:name="com.google.android.gms.ads.APPLICATION_ID"
+      android:value="ca-app-pub-8459323526901202~2792049297"/>
   </application>
 </manifest>

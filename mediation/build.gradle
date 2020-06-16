@@ -1,5 +1,8 @@
-apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
+plugins {
+    id "com.android.library"
+    id "maven-publish"
+    id "kotlin-android"
+}
 
 android {
     compileSdkVersion 29
@@ -36,6 +39,11 @@ android {
         sourceCompatibility 1.8
         targetCompatibility 1.8
     }
+
+    packagingOptions {
+        // Both AssertJ and ByteBuddy (via Mockito) brings this and the duplication yield an error
+        exclude 'META-INF/licenses/ASM'
+    }
 }
 
 dependencies {
@@ -61,6 +69,9 @@ dependencies {
     androidTestImplementation("androidx.test:core:1.2.0")
     androidTestImplementation("androidx.legacy:legacy-support-core-utils:1.0.0")
     androidTestImplementation("org.mockito:mockito-android:3.3.0")
+    androidTestImplementation("org.jetbrains.kotlin:kotlin-stdlib")
+    androidTestImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    androidTestImplementation("org.assertj:assertj-core:3.16.1")
     androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
         exclude(group: "com.android.support")
     }

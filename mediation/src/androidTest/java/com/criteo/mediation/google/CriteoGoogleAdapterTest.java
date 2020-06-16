@@ -5,6 +5,7 @@ import static com.criteo.publisher.CriteoUtil.clearCriteo;
 import static com.criteo.publisher.CriteoUtil.givenInitializedCriteo;
 import static com.criteo.publisher.TestAdUnits.BANNER_320_50;
 import static com.criteo.publisher.TestAdUnits.INTERSTITIAL;
+import static com.criteo.publisher.TestAdUnits.NATIVE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -13,8 +14,10 @@ import com.criteo.publisher.CriteoBannerView;
 import com.criteo.publisher.mock.MockedDependenciesRule;
 import com.criteo.publisher.model.AdSize;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
 import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
 import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
+import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,12 +38,46 @@ public class CriteoGoogleAdapterTest {
     @Mock
     private CustomEventBannerListener bannerListener;
 
+    @Mock
+    private CustomEventNativeListener nativeListener;
+
     private AdapterHelper adapterHelper;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         adapterHelper = new AdapterHelper();
+    }
+
+    @Test
+    public void requestNativeAd_GivenEmptyServerParameter_NotifyForInvalidRequest() throws Exception {
+        String serverParameter = "";
+
+        adapterHelper.requestNativeAd(serverParameter, nativeListener);
+
+        verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
+    }
+
+    @Test
+    public void requestNativeAd_GivenServerParameterWithoutCpId_NotifyForError() throws Exception {
+        JSONObject serverParams = new JSONObject();
+        serverParams.put("adUnitId", BANNER_320_50.getAdUnitId());
+        String serverParameter = serverParams.toString();
+
+        adapterHelper.requestNativeAd(serverParameter, nativeListener);
+
+        verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+    }
+
+    @Test
+    public void requestNativeAd_GivenServerParameterWithoutAdUnit_NotifyForError() throws Exception {
+        JSONObject serverParams = new JSONObject();
+        serverParams.put("cpId", TEST_CP_ID);
+        String serverParameter = serverParams.toString();
+
+        adapterHelper.requestNativeAd(serverParameter, nativeListener);
+
+        verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
     }
 
     @Test
@@ -106,6 +143,28 @@ public class CriteoGoogleAdapterTest {
     }
 
     @Test
+    public void givenNotInitializedCriteo_WhenLoadingNativeTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne()
+        throws Exception {
+        clearCriteo();
+
+        loadValidNative();
+        loadValidNative();
+
+        checkMissFirstNativeOpportunityBecauseOfBidCachingAndSucceedOnNextOne();
+    }
+
+    @Test
+    public void givenInitializedCriteo_WhenLoadingNativeTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne()
+        throws Exception {
+        givenInitializedCriteo();
+
+        loadValidNative();
+        loadValidNative();
+
+        checkMissFirstNativeOpportunityBecauseOfBidCachingAndSucceedOnNextOne();
+    }
+
+    @Test
     public void givenNotInitializedCriteo_WhenLoadingBannerTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne()
             throws Exception {
         clearCriteo();
@@ -149,6 +208,11 @@ public class CriteoGoogleAdapterTest {
         checkMissFirstInterstitialOpportunityBecauseOfBidCachingAndSucceedOnNextOne();
     }
 
+    private void loadValidNative() {
+        adapterHelper.requestNativeAd(NATIVE, nativeListener);
+        mockedDependenciesRule.waitForIdleState();
+    }
+
     private void loadValidBanner() {
         adapterHelper.requestBannerAd(BANNER_320_50, bannerListener);
         mockedDependenciesRule.waitForIdleState();
@@ -157,6 +221,13 @@ public class CriteoGoogleAdapterTest {
     private void loadValidInterstitial() {
         adapterHelper.requestInterstitialAd(INTERSTITIAL, interstitialListener);
         mockedDependenciesRule.waitForIdleState();
+    }
+
+    private void checkMissFirstNativeOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
+        InOrder inOrder = inOrder(nativeListener);
+        inOrder.verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
+        inOrder.verify(nativeListener).onAdLoaded(any(UnifiedNativeAdMapper.class));
+        inOrder.verifyNoMoreInteractions();
     }
 
     private void checkMissFirstBannerOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {

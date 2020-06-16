@@ -12,9 +12,12 @@ import com.criteo.publisher.model.AdSize;
 import com.criteo.publisher.model.AdUnit;
 import com.criteo.publisher.model.BannerAdUnit;
 import com.criteo.publisher.model.InterstitialAdUnit;
+import com.criteo.publisher.model.NativeAdUnit;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
+import com.google.android.gms.ads.mediation.NativeMediationAdRequest;
 import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
 import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
+import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,6 +31,9 @@ public class AdapterHelper {
 
   @NonNull
   private final MediationAdRequest mediationAdRequest = mock(MediationAdRequest.class);
+
+  @NonNull
+  private final NativeMediationAdRequest nativeMediationAdRequest = mock(NativeMediationAdRequest.class);
 
   @NonNull
   private final Bundle customEventExtras = new Bundle();
@@ -48,7 +54,8 @@ public class AdapterHelper {
         serverParameters,
         adSize,
         mediationAdRequest,
-        customEventExtras));
+        customEventExtras
+    ));
   }
 
   public void requestBannerAd(
@@ -59,20 +66,44 @@ public class AdapterHelper {
     requestBannerAd(serverParameters, adUnit.getSize(), listener);
   }
 
+  public void requestNativeAd(
+      @NonNull String serverParameters,
+      @NonNull CustomEventNativeListener listener
+  ) {
+    runOnMainThreadAndWait(() -> adapter.requestNativeAd(
+        context,
+        listener,
+        serverParameters,
+        nativeMediationAdRequest,
+        customEventExtras
+    ));
+  }
+
+  public void requestNativeAd(
+      @NonNull NativeAdUnit adUnit,
+      @NonNull CustomEventNativeListener listener
+  ) {
+    String serverParameters = getServerParameters(adUnit);
+    requestNativeAd(serverParameters, listener);
+  }
+
   public void requestInterstitialAd(
       @NonNull String serverParameters,
-      @NonNull CustomEventInterstitialListener listener) {
+      @NonNull CustomEventInterstitialListener listener
+  ) {
     runOnMainThreadAndWait(() -> adapter.requestInterstitialAd(
         context,
         listener,
         serverParameters,
         mediationAdRequest,
-        customEventExtras));
+        customEventExtras
+    ));
   }
 
   public void requestInterstitialAd(
       @NonNull InterstitialAdUnit adUnit,
-      @NonNull CustomEventInterstitialListener listener) {
+      @NonNull CustomEventInterstitialListener listener
+  ) {
     String serverParameters = getServerParameters(adUnit);
     requestInterstitialAd(serverParameters, listener);
   }

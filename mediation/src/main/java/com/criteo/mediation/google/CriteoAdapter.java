@@ -5,27 +5,36 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.criteo.mediation.google.advancednative.CriteoNativeEventListener;
+import com.criteo.mediation.google.advancednative.NoOpNativeRenderer;
 import com.criteo.publisher.Criteo;
 import com.criteo.publisher.CriteoBannerAdListener;
 import com.criteo.publisher.CriteoBannerView;
 import com.criteo.publisher.CriteoInitException;
 import com.criteo.publisher.CriteoInterstitial;
+import com.criteo.publisher.advancednative.CriteoNativeLoader;
 import com.criteo.publisher.model.AdUnit;
 import com.criteo.publisher.model.BannerAdUnit;
 import com.criteo.publisher.model.InterstitialAdUnit;
+import com.criteo.publisher.model.NativeAdUnit;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
+import com.google.android.gms.ads.mediation.NativeMediationAdRequest;
 import com.google.android.gms.ads.mediation.customevent.CustomEventBanner;
 import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
 import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitial;
 import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
+import com.google.android.gms.ads.mediation.customevent.CustomEventNative;
+import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial {
+public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial, CustomEventNative {
 
     protected static final String TAG = CriteoAdapter.class.getSimpleName();
 
@@ -33,13 +42,14 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
     protected static final String AD_UNIT_ID = "adUnitId";
 
     private CriteoInterstitial criteoInterstitial;
-    private CriteoBannerView criteoBanner;
     private BannerAdUnit bannerAdUnit;
     private InterstitialAdUnit interstitialAdUnit;
+    private NativeAdUnit nativeAdUnit;
 
     private enum FormatType {
         BANNER,
-        INTERSTITIAL
+        INTERSTITIAL,
+        NATIVE
     }
 
     /**
@@ -62,7 +72,7 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
         try {
 
             if (initialize(context, serverParameter, size, FormatType.BANNER)) {
-                criteoBanner = new CriteoBannerView(context, bannerAdUnit);
+                CriteoBannerView criteoBanner = new CriteoBannerView(context, bannerAdUnit);
                 CriteoBannerAdListener criteoBannerAdListener = new CriteoBannerEventListener(listener);
                 criteoBanner.setCriteoBannerAdListener(criteoBannerAdListener);
                 criteoBanner.loadAd();
@@ -123,6 +133,38 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
         }
     }
 
+    @Override
+    public void requestNativeAd(
+        @NonNull Context context,
+        @NonNull CustomEventNativeListener listener,
+        @Nullable String serverParameter,
+        @Nullable NativeMediationAdRequest nativeMediationAdRequest,
+        @Nullable Bundle bundle
+    ) {
+        if (TextUtils.isEmpty(serverParameter)) {
+            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
+            Log.e(TAG, "Server parameter was empty.");
+            return;
+        }
+
+        try {
+            if (initialize(context, serverParameter, null, FormatType.NATIVE)) {
+                CriteoNativeLoader loader = new CriteoNativeLoader(
+                    nativeAdUnit,
+                    new CriteoNativeEventListener(listener),
+                    new NoOpNativeRenderer()
+                );
+
+                loader.loadAd();
+            } else {
+                listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
+            }
+        } catch (JSONException | CriteoInitException ex) {
+            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+            Log.e(TAG, "Adapter failed to initialize: " + ex.getMessage());
+        }
+    }
+
     private boolean initialize(Context context, String serverParameter, AdSize size,
             FormatType formatType) throws JSONException, CriteoInitException {
         JSONObject parameters = new JSONObject(serverParameter);
@@ -136,6 +178,9 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
         } else if (formatType == FormatType.INTERSTITIAL) {
             interstitialAdUnit = new InterstitialAdUnit(adUnitId);
             adUnits.add(interstitialAdUnit);
+        } else if (formatType == FormatType.NATIVE) {
+            nativeAdUnit = new NativeAdUnit(adUnitId);
+            adUnits.add(nativeAdUnit);
         }
 
         try {
