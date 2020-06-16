@@ -27,10 +27,10 @@ import com.google.android.gms.ads.mediation.customevent.CustomEventBanner;
 import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
 import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitial;
 import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
+import com.google.android.gms.ads.mediation.customevent.CustomEventListener;
 import com.google.android.gms.ads.mediation.customevent.CustomEventNative;
 import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,30 +62,12 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
             AdSize size,
             MediationAdRequest mediationAdRequest,
             Bundle customEventExtras) {
-
-        if (TextUtils.isEmpty(serverParameter)) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
-            Log.e(TAG, "Server parameter was empty.");
-            return;
+        if (initialize(context, serverParameter, size, FormatType.BANNER, listener)) {
+            CriteoBannerView criteoBanner = new CriteoBannerView(context, bannerAdUnit);
+            CriteoBannerAdListener criteoBannerAdListener = new CriteoBannerEventListener(listener);
+            criteoBanner.setCriteoBannerAdListener(criteoBannerAdListener);
+            criteoBanner.loadAd();
         }
-
-        try {
-
-            if (initialize(context, serverParameter, size, FormatType.BANNER)) {
-                CriteoBannerView criteoBanner = new CriteoBannerView(context, bannerAdUnit);
-                CriteoBannerAdListener criteoBannerAdListener = new CriteoBannerEventListener(listener);
-                criteoBanner.setCriteoBannerAdListener(criteoBannerAdListener);
-                criteoBanner.loadAd();
-            } else {
-                listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-            }
-
-        } catch (JSONException | CriteoInitException ex) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-            Log.e(TAG, "Adapter failed to initialize: " + ex.getMessage());
-        }
-
-
     }
 
     /**
@@ -97,32 +79,15 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
             String serverParameter,
             MediationAdRequest mediationAdRequest,
             Bundle customEventExtras) {
+        if (initialize(context, serverParameter, null, FormatType.INTERSTITIAL, listener)) {
+            criteoInterstitial = new CriteoInterstitial(context, interstitialAdUnit);
+            CriteoInterstitialEventListener criteoInterstitialEventListener = new CriteoInterstitialEventListener(
+                listener);
+            criteoInterstitial.setCriteoInterstitialAdListener(criteoInterstitialEventListener);
+            criteoInterstitial.setCriteoInterstitialAdDisplayListener(criteoInterstitialEventListener);
 
-        if (TextUtils.isEmpty(serverParameter)) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
-            Log.e(TAG, "Server parameter was empty.");
-            return;
+            criteoInterstitial.loadAd();
         }
-
-        try {
-
-            if (initialize(context, serverParameter, null, FormatType.INTERSTITIAL)) {
-                criteoInterstitial = new CriteoInterstitial(context, interstitialAdUnit);
-                CriteoInterstitialEventListener criteoInterstitialEventListener = new CriteoInterstitialEventListener(
-                        listener);
-                criteoInterstitial.setCriteoInterstitialAdListener(criteoInterstitialEventListener);
-                criteoInterstitial.setCriteoInterstitialAdDisplayListener(criteoInterstitialEventListener);
-
-                criteoInterstitial.loadAd();
-            } else {
-                listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-            }
-
-        } catch (JSONException | CriteoInitException ex) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-            Log.e(TAG, "Adapter failed to initialize: " + ex.getMessage());
-        }
-
     }
 
     @Override
@@ -141,54 +106,82 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
         @Nullable NativeMediationAdRequest nativeMediationAdRequest,
         @Nullable Bundle bundle
     ) {
-        if (TextUtils.isEmpty(serverParameter)) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
-            Log.e(TAG, "Server parameter was empty.");
-            return;
-        }
+        if (initialize(context, serverParameter, null, FormatType.NATIVE, listener)) {
+            CriteoNativeLoader loader = new CriteoNativeLoader(
+                nativeAdUnit,
+                new CriteoNativeEventListener(listener),
+                new NoOpNativeRenderer()
+            );
 
-        try {
-            if (initialize(context, serverParameter, null, FormatType.NATIVE)) {
-                CriteoNativeLoader loader = new CriteoNativeLoader(
-                    nativeAdUnit,
-                    new CriteoNativeEventListener(listener),
-                    new NoOpNativeRenderer()
-                );
-
-                loader.loadAd();
-            } else {
-                listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-            }
-        } catch (JSONException | CriteoInitException ex) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-            Log.e(TAG, "Adapter failed to initialize: " + ex.getMessage());
+            loader.loadAd();
         }
     }
 
-    private boolean initialize(Context context, String serverParameter, AdSize size,
-            FormatType formatType) throws JSONException, CriteoInitException {
-        JSONObject parameters = new JSONObject(serverParameter);
-        String criteoPublisherId = parameters.getString(CRITEO_PUBLISHER_ID);
-        String adUnitId = parameters.getString(AD_UNIT_ID);
-        List<AdUnit> adUnits = new ArrayList<>();
-        if (formatType == FormatType.BANNER) {
-            bannerAdUnit = new BannerAdUnit(adUnitId,
-                    new com.criteo.publisher.model.AdSize(size.getWidth(), size.getHeight()));
-            adUnits.add(bannerAdUnit);
-        } else if (formatType == FormatType.INTERSTITIAL) {
-            interstitialAdUnit = new InterstitialAdUnit(adUnitId);
-            adUnits.add(interstitialAdUnit);
-        } else if (formatType == FormatType.NATIVE) {
-            nativeAdUnit = new NativeAdUnit(adUnitId);
-            adUnits.add(nativeAdUnit);
+    private boolean initialize(
+        @NonNull Context context,
+        @Nullable String serverParameter,
+        @Nullable AdSize size,
+        @NonNull FormatType formatType,
+        @NonNull CustomEventListener listener
+    ) {
+        if (TextUtils.isEmpty(serverParameter)) {
+            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
+            Log.e(TAG, "Server parameter was empty.");
+            return false;
         }
 
+        String criteoPublisherId;
+        String adUnitId;
         try {
+            JSONObject parameters = new JSONObject(serverParameter);
+            criteoPublisherId = parameters.getString(CRITEO_PUBLISHER_ID);
+            adUnitId = parameters.getString(AD_UNIT_ID);
+        } catch (JSONException e) {
+            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+            Log.e(TAG, "Adapter failed to read server parameters", e);
+            return false;
+        }
+
+        AdUnit adUnit = initAdUnit(formatType, adUnitId, size);
+
+        try {
+            //noinspection ResultOfMethodCallIgnored
             Criteo.getInstance();
             return true;
         } catch (Exception ex) {
-            Criteo.init((Application) context.getApplicationContext(), criteoPublisherId, adUnits);
+            try {
+                new Criteo.Builder((Application) context.getApplicationContext(), criteoPublisherId)
+                    .adUnits(Collections.singletonList(adUnit))
+                    .init();
+            } catch (CriteoInitException e) {
+                listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+                Log.e(TAG, "Adapter failed to initialize", e);
+                return false;
+            }
+
+            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
             return false;
+        }
+    }
+
+    private AdUnit initAdUnit(
+        @NonNull FormatType formatType,
+        @NonNull String adUnitId,
+        @Nullable AdSize size
+    ) {
+        switch (formatType) {
+            case BANNER:
+                com.criteo.publisher.model.AdSize adMobSize = new com.criteo.publisher.model.AdSize(
+                    size.getWidth(),
+                    size.getHeight()
+                );
+                return bannerAdUnit = new BannerAdUnit(adUnitId, adMobSize);
+            case INTERSTITIAL:
+                return interstitialAdUnit = new InterstitialAdUnit(adUnitId);
+            case NATIVE:
+                return nativeAdUnit = new NativeAdUnit(adUnitId);
+            default:
+                throw new UnsupportedOperationException("Unknown format: " + formatType);
         }
     }
 
