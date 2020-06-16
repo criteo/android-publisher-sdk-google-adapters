@@ -32,4 +32,10 @@ public class NativeInternal {
     nativeAd.setAdChoiceClickableView(adChoiceView);
   }
 
+  public static void setRenderer(
+      @NonNull CriteoNativeAd nativeAd,
+      @NonNull CriteoNativeRenderer renderer) {
+    nativeAd.setRenderer(new AdChoiceOverlayNativeRenderer(renderer));
+  }
+
 }

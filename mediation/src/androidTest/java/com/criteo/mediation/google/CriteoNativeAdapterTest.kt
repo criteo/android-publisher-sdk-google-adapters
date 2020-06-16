@@ -2,9 +2,11 @@ package com.criteo.mediation.google
 
 import android.content.ComponentName
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.provider.Settings.Secure
 import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.google.activity.DummyActivity
@@ -13,6 +15,8 @@ import com.criteo.publisher.BidManager
 import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
 import com.criteo.publisher.StubConstants
 import com.criteo.publisher.TestAdUnits
+import com.criteo.publisher.advancednative.CriteoMediaView
+import com.criteo.publisher.advancednative.drawable
 import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockBean
@@ -21,6 +25,7 @@ import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.AdUnit
 import com.criteo.publisher.network.PubSdkApi
 import com.google.android.gms.ads.*
+import com.google.android.gms.ads.formats.MediaView
 import com.google.android.gms.ads.formats.UnifiedNativeAd
 import com.google.android.gms.ads.formats.UnifiedNativeAdView
 import com.nhaarman.mockitokotlin2.*
@@ -45,7 +50,6 @@ class CriteoNativeAdapterTest {
     val DESCRIPTION_TAG = Any()
     val PRICE_TAG = Any()
     val CALL_TO_ACTION_TAG = Any()
-    val PRODUCT_IMAGE_TAG = Any()
     val ADVERTISER_DOMAIN_TAG = Any()
     val ADVERTISER_DESCRIPTION_TAG = Any()
     val ADVERTISER_LOGO_TAG = Any()
@@ -101,12 +105,18 @@ class CriteoNativeAdapterTest {
     // When
     val adLoader = AdLoader.Builder(context, ADMOB_AD_UNIT_ID).forUnifiedNativeAd {
       adView = UnifiedNativeAdView(context)
-      adView.addView(createTextView(context, TITLE_TAG, it.headline))
-      adView.addView(createTextView(context, DESCRIPTION_TAG, it.body))
-      adView.addView(createTextView(context, PRICE_TAG, it.price))
-      adView.addView(createTextView(context, CALL_TO_ACTION_TAG, it.callToAction))
-      adView.addView(createTextView(context, ADVERTISER_DOMAIN_TAG, it.extras["crtn_advdomain"] as String))
-      adView.addView(createTextView(context, ADVERTISER_DESCRIPTION_TAG, it.advertiser))
+
+      val layout = LinearLayout(context)
+      layout.orientation = LinearLayout.VERTICAL
+      layout.addView(createTextView(context, TITLE_TAG, it.headline))
+      layout.addView(createTextView(context, DESCRIPTION_TAG, it.body))
+      layout.addView(createTextView(context, PRICE_TAG, it.price))
+      layout.addView(createTextView(context, CALL_TO_ACTION_TAG, it.callToAction))
+      layout.addView(createTextView(context, ADVERTISER_DOMAIN_TAG, it.extras["crtn_advdomain"] as String))
+      layout.addView(createTextView(context, ADVERTISER_DESCRIPTION_TAG, it.advertiser))
+      layout.addView(adView.createMediaView(context, it.mediaContent))
+
+      adView.addView(layout)
       adView.setNativeAd(it)
 
       adViewIsRendered.countDown()
@@ -125,8 +135,6 @@ class CriteoNativeAdapterTest {
     assertThat(adView.findTextWithTag(ADVERTISER_DOMAIN_TAG)).isEqualTo(expectedAssets.advertiserDomain)
     assertThat(adView.findTextWithTag(ADVERTISER_DESCRIPTION_TAG)).isEqualTo(expectedAssets.advertiserDescription)
 
-    // TODO images
-
     // Impression
     adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
 
@@ -138,6 +146,11 @@ class CriteoNativeAdapterTest {
     // Click
     adView.assertClickRedirectTo(expectedProduct.clickUrl, true)
     adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
+
+    // Product media
+    assertThat(adView.mediaView.findDrawable()).isNotNull
+
+    // TODO advertiser logo
   }
 
   @Test
@@ -185,8 +198,19 @@ class CriteoNativeAdapterTest {
     return view
   }
 
+  private fun UnifiedNativeAdView.createMediaView(context: Context, mediaContent: MediaContent): MediaView {
+    val view = MediaView(context)
+    mediaView = view
+    view.setMediaContent(mediaContent)
+    return view
+  }
+
   private fun View.findTextWithTag(tag: Any): CharSequence {
     return findViewWithTag<TextView>(tag).text
+  }
+
+  private fun MediaView.findDrawable(): Drawable? {
+    return (getChildAt(0) as CriteoMediaView).drawable
   }
 
   private fun View.assertClickRedirectTo(

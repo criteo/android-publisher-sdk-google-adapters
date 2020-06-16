@@ -3,14 +3,18 @@ package com.criteo.mediation.google.advancednative;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.criteo.mediation.google.ErrorCode;
 import com.criteo.publisher.CriteoErrorCode;
+import com.criteo.publisher.advancednative.CriteoMediaView;
 import com.criteo.publisher.advancednative.CriteoNativeAd;
 import com.criteo.publisher.advancednative.CriteoNativeAdListener;
+import com.criteo.publisher.advancednative.CriteoNativeRenderer;
 import com.criteo.publisher.advancednative.NativeInternal;
+import com.criteo.publisher.advancednative.RendererHelper;
 import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
 import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
 import java.lang.ref.WeakReference;
@@ -71,13 +75,17 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             bundle.putString(CRT_NATIVE_ADV_DOMAIN, nativeAd.getAdvertiserDomain());
             setExtras(bundle);
 
-            // TODO? setHasVideoContent(false);
-            // TODO product media setMediaView();
             // TODO advertiser logo setIcon();
 
-            // AdChoice
             if (context != null) {
+                // Product media
+                ProductMediaRenderer renderer = new ProductMediaRenderer();
+                NativeInternal.setRenderer(nativeAd, renderer);
                 View renderedAd = nativeAd.createNativeRenderedView(context, null);
+                setMediaView(renderer.getLastProductMediaView());
+                setHasVideoContent(false);
+
+                // AdChoice
                 View adChoiceView = NativeInternal.getAdChoiceView(nativeAd, renderedAd);
                 if (adChoiceView != null) {
                     adChoiceView.setTag(AD_CHOICE_TAG);
@@ -102,6 +110,7 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             if (nativeAd != null) {
                 // The renderer is expected to do nothing, but the SDK will start to watch this view
                 // for clicks and impressions
+                NativeInternal.setRenderer(nativeAd, new NoOpNativeRenderer());
                 nativeAd.renderNativeView(containerView);
 
                 // As the AdChoice icon is not injected by the SDK, we should explicitly set the
@@ -110,6 +119,35 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
                 if (adChoiceView != null) {
                     NativeInternal.setAdChoiceClickableView(nativeAd, adChoiceView);
                 }
+            }
+        }
+    }
+
+    private static class ProductMediaRenderer implements CriteoNativeRenderer {
+
+        @Nullable
+        private CriteoMediaView lastProductMediaView;
+
+        @Nullable
+        public CriteoMediaView getLastProductMediaView() {
+            return lastProductMediaView;
+        }
+
+        @NonNull
+        @Override
+        public View createNativeView(@NonNull Context context, @Nullable ViewGroup parent) {
+            lastProductMediaView = new CriteoMediaView(context);
+            return lastProductMediaView;
+        }
+
+        @Override
+        public void renderNativeView(
+            @NonNull RendererHelper helper,
+            @NonNull View nativeView,
+            @NonNull CriteoNativeAd nativeAd
+        ) {
+            if (lastProductMediaView != null) {
+                helper.setMediaInView(nativeAd.getProductMedia(), lastProductMediaView);
             }
         }
     }
