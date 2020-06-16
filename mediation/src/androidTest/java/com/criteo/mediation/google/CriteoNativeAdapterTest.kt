@@ -1,30 +1,33 @@
 package com.criteo.mediation.google
 
+import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings.Secure
 import android.view.View
 import android.widget.TextView
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.criteo.mediation.google.activity.DummyActivity
 import com.criteo.publisher.BidManager
 import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
 import com.criteo.publisher.StubConstants
 import com.criteo.publisher.TestAdUnits
+import com.criteo.publisher.adview.Redirection
+import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
+import com.criteo.publisher.mock.MockBean
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.AdUnit
-import com.google.android.gms.ads.AdLoader
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.gms.ads.*
 import com.google.android.gms.ads.formats.UnifiedNativeAd
 import com.google.android.gms.ads.formats.UnifiedNativeAdView
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doAnswer
-import com.nhaarman.mockitokotlin2.mockingDetails
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
+import java.net.URI
 import java.util.concurrent.CountDownLatch
 import javax.inject.Inject
 
@@ -48,14 +51,26 @@ class CriteoNativeAdapterTest {
   @JvmField
   val mockedDependenciesRule = MockedDependenciesRule()
 
+  @Rule
+  @JvmField
+  var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
+
   @Inject
   private lateinit var context: Context
 
   @SpyBean
   private lateinit var bidManager: BidManager
 
+  @MockBean
+  private lateinit var redirection: Redirection
+
+  @Mock
+  private lateinit var adListener: AdListener
+
   @Before
   fun setUp() {
+    MockitoAnnotations.initMocks(this)
+
     val deviceId = Secure.getString(context.contentResolver, Secure.ANDROID_ID)
     MobileAds.initialize(context)
     MobileAds.setRequestConfiguration(RequestConfiguration.Builder()
@@ -88,7 +103,7 @@ class CriteoNativeAdapterTest {
       adView.setNativeAd(it)
 
       adViewIsRendered.countDown()
-    }.build()
+    }.withAdListener(adListener).build()
 
     adLoader.loadAd(AdRequest.Builder().build())
 
@@ -104,7 +119,10 @@ class CriteoNativeAdapterTest {
     assertThat(adView.findTextWithTag(ADVERTISER_DESCRIPTION_TAG)).isEqualTo(expectedAssets.advertiserDescription)
 
     // TODO images
-    // TODO click
+
+    // Click
+    adView.assertClickRedirectTo(expectedProduct.clickUrl)
+
     // TODO impression
     // TODO AdChoice
   }
@@ -156,6 +174,30 @@ class CriteoNativeAdapterTest {
 
   private fun View.findTextWithTag(tag: Any): CharSequence {
     return findViewWithTag<TextView>(tag).text
+  }
+
+  private fun View.assertClickRedirectTo(expectedRedirectionUri: URI) {
+    clearInvocations(redirection)
+    clearInvocations(adListener)
+
+    runOnMainThreadAndWait {
+      performClick()
+    }
+
+    mockedDependenciesRule.waitForIdleState()
+
+    var expectedComponentName: ComponentName? = null
+    scenarioRule.scenario.onActivity {
+      expectedComponentName = it.componentName
+    }
+
+    verify(redirection).redirect(
+        eq(expectedRedirectionUri.toString()),
+        eq(expectedComponentName),
+        any()
+    )
+
+    verify(adListener).onAdClicked()
   }
 
 }

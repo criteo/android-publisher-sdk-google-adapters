@@ -8,5 +8,7 @@
     <meta-data
       android:name="com.google.android.gms.ads.APPLICATION_ID"
       android:value="ca-app-pub-8459323526901202~2792049297"/>
+
+    <activity android:name="com.criteo.mediation.google.activity.DummyActivity"/>
   </application>
 </manifest>

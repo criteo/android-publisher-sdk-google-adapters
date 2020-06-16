@@ -1,6 +1,7 @@
 package com.criteo.mediation.google.advancednative;
 
 import android.os.Bundle;
+import android.view.View;
 import androidx.annotation.NonNull;
 import com.criteo.mediation.google.ErrorCode;
 import com.criteo.publisher.CriteoErrorCode;
@@ -8,6 +9,8 @@ import com.criteo.publisher.advancednative.CriteoNativeAd;
 import com.criteo.publisher.advancednative.CriteoNativeAdListener;
 import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
 import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
+import java.lang.ref.WeakReference;
+import java.util.Map;
 
 public class CriteoNativeEventListener extends CriteoNativeAdListener {
 
@@ -29,9 +32,17 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
         adMobListener.onAdFailedToLoad(ErrorCode.toAdMob(errorCode));
     }
 
+    @Override
+    public void onAdClicked() {
+        adMobListener.onAdClicked();
+    }
+
     private static class CriteoUnifiedNativeAdMapper extends UnifiedNativeAdMapper {
 
+        private final WeakReference<CriteoNativeAd> nativeAdRef;
+
         CriteoUnifiedNativeAdMapper(CriteoNativeAd nativeAd) {
+            // Text fields
             setHeadline(nativeAd.getTitle());
             setBody(nativeAd.getDescription());
             setPrice(nativeAd.getPrice());
@@ -46,8 +57,27 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             // TODO product media setMediaView();
             // TODO advertiser logo setIcon();
             // TODO setAdChoicesContent();
-            // TODO click
+
+            // Click
+            setOverrideClickHandling(true);
+
             // TODO impression
+
+            nativeAdRef = new WeakReference<>(nativeAd);
+        }
+
+        @Override
+        public void trackViews(
+            View containerView,
+            Map<String, View> clickableAssetViews,
+            Map<String, View> nonClickableAssetViews
+        ) {
+            CriteoNativeAd nativeAd = nativeAdRef.get();
+            if (nativeAd != null) {
+                // The renderer is expected to do nothing, but the SDK will start to watch this view
+                // for clicks and impressions
+                nativeAd.renderNativeView(containerView);
+            }
         }
     }
 }
