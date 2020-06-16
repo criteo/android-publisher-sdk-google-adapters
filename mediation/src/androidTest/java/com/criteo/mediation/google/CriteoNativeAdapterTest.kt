@@ -1,6 +1,7 @@
 package com.criteo.mediation.google
 
 import android.content.Context
+import android.provider.Settings.Secure
 import android.view.View
 import android.widget.TextView
 import com.criteo.publisher.BidManager
@@ -13,12 +14,15 @@ import com.criteo.publisher.model.AdUnit
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.gms.ads.formats.UnifiedNativeAd
 import com.google.android.gms.ads.formats.UnifiedNativeAdView
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mockingDetails
 import com.nhaarman.mockitokotlin2.whenever
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
@@ -50,6 +54,15 @@ class CriteoNativeAdapterTest {
   @SpyBean
   private lateinit var bidManager: BidManager
 
+  @Before
+  fun setUp() {
+    val deviceId = Secure.getString(context.contentResolver, Secure.ANDROID_ID)
+    MobileAds.initialize(context)
+    MobileAds.setRequestConfiguration(RequestConfiguration.Builder()
+        .setTestDeviceIds(listOf(deviceId))
+        .build())
+  }
+
   @Test
   fun loadNativeAd_GivenValidBid_RenderAllNativePayload() {
     val expectedAssets = StubConstants.STUB_NATIVE_ASSETS
@@ -59,7 +72,6 @@ class CriteoNativeAdapterTest {
     val adViewIsRendered = CountDownLatch(1)
 
     // Given
-    MobileAds.initialize(context)
     givenInitializedCriteo(adUnit)
     mockedDependenciesRule.waitForIdleState()
     givenAdUnitReplacedBy(adUnit)
@@ -95,6 +107,34 @@ class CriteoNativeAdapterTest {
     // TODO click
     // TODO impression
     // TODO AdChoice
+  }
+
+  @Test
+  fun loadNativeAd_GivenInvalidBid_NotifyAdMobForFailure() {
+    val adUnit = TestAdUnits.NATIVE_UNKNOWN
+    lateinit var nativeAd: UnifiedNativeAd
+    val adIsReceived = CountDownLatch(1)
+
+    // Given
+    givenInitializedCriteo(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+    givenAdUnitReplacedBy(adUnit)
+
+    // When
+    val adLoader = AdLoader.Builder(context, ADMOB_AD_UNIT_ID).forUnifiedNativeAd {
+      nativeAd = it
+      adIsReceived.countDown()
+    }.build()
+
+    adLoader.loadAd(AdRequest.Builder().build())
+    adIsReceived.await()
+    mockedDependenciesRule.waitForIdleState()
+
+    // In the waterfall, there is first the Criteo adapter, then the AdMob one (which is imposed).
+    // Verifying that the response come from the AdMob adapter implies that the Criteo one did
+    // notify AdMob framework for the no bid.
+    assertThat(nativeAd.responseInfo?.mediationAdapterClassName)
+        .isEqualTo("com.google.ads.mediation.admob.AdMobAdapter")
   }
 
   private fun givenAdUnitReplacedBy(adUnit: AdUnit) {
