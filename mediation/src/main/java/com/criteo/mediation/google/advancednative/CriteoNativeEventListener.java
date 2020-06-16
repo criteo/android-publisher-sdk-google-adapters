@@ -1,12 +1,16 @@
 package com.criteo.mediation.google.advancednative;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.criteo.mediation.google.ErrorCode;
 import com.criteo.publisher.CriteoErrorCode;
 import com.criteo.publisher.advancednative.CriteoNativeAd;
 import com.criteo.publisher.advancednative.CriteoNativeAdListener;
+import com.criteo.publisher.advancednative.NativeInternal;
 import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
 import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
 import java.lang.ref.WeakReference;
@@ -16,15 +20,24 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
 
     private static final String CRT_NATIVE_ADV_DOMAIN = "crtn_advdomain";
 
+    @VisibleForTesting
+    public static final Object AD_CHOICE_TAG = new Object();
+
+    private final WeakReference<Context> contextRef;
+
     private final CustomEventNativeListener adMobListener;
 
-    public CriteoNativeEventListener(CustomEventNativeListener adMobListener) {
+    public CriteoNativeEventListener(
+        Context context,
+        CustomEventNativeListener adMobListener
+    ) {
+        this.contextRef = new WeakReference<>(context);
         this.adMobListener = adMobListener;
     }
 
     @Override
     public void onAdReceived(@NonNull CriteoNativeAd nativeAd) {
-        adMobListener.onAdLoaded(new CriteoUnifiedNativeAdMapper(nativeAd));
+        adMobListener.onAdLoaded(new CriteoUnifiedNativeAdMapper(contextRef.get(), nativeAd));
     }
 
     @Override
@@ -46,7 +59,7 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
 
         private final WeakReference<CriteoNativeAd> nativeAdRef;
 
-        CriteoUnifiedNativeAdMapper(CriteoNativeAd nativeAd) {
+        CriteoUnifiedNativeAdMapper(@Nullable Context context, CriteoNativeAd nativeAd) {
             // Text fields
             setHeadline(nativeAd.getTitle());
             setBody(nativeAd.getDescription());
@@ -61,7 +74,16 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             // TODO? setHasVideoContent(false);
             // TODO product media setMediaView();
             // TODO advertiser logo setIcon();
-            // TODO setAdChoicesContent();
+
+            // AdChoice
+            if (context != null) {
+                View renderedAd = nativeAd.createNativeRenderedView(context, null);
+                View adChoiceView = NativeInternal.getAdChoiceView(nativeAd, renderedAd);
+                if (adChoiceView != null) {
+                    adChoiceView.setTag(AD_CHOICE_TAG);
+                    setAdChoicesContent(adChoiceView);
+                }
+            }
 
             // Click & impression
             setOverrideClickHandling(true);
@@ -81,6 +103,13 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
                 // The renderer is expected to do nothing, but the SDK will start to watch this view
                 // for clicks and impressions
                 nativeAd.renderNativeView(containerView);
+
+                // As the AdChoice icon is not injected by the SDK, we should explicitly set the
+                // click listeners dedicated to AdChoice
+                View adChoiceView = containerView.findViewWithTag(AD_CHOICE_TAG);
+                if (adChoiceView != null) {
+                    NativeInternal.setAdChoiceClickableView(nativeAd, adChoiceView);
+                }
             }
         }
     }

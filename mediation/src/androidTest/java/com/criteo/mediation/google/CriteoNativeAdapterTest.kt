@@ -4,9 +4,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings.Secure
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.google.activity.DummyActivity
+import com.criteo.mediation.google.advancednative.CriteoNativeEventListener.AD_CHOICE_TAG
 import com.criteo.publisher.BidManager
 import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
 import com.criteo.publisher.StubConstants
@@ -125,13 +127,17 @@ class CriteoNativeAdapterTest {
 
     // TODO images
 
-    // Click
-    adView.assertClickRedirectTo(expectedProduct.clickUrl)
-
     // Impression
     adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
 
-    // TODO AdChoice
+    // AdChoice
+    val adChoiceView = adView.findViewWithTag<ImageView>(AD_CHOICE_TAG)
+    assertThat(adChoiceView).isNotNull
+    assertThat(adChoiceView.drawable).isNotNull
+
+    // Click
+    adView.assertClickRedirectTo(expectedProduct.clickUrl, true)
+    adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
   }
 
   @Test
@@ -183,7 +189,10 @@ class CriteoNativeAdapterTest {
     return findViewWithTag<TextView>(tag).text
   }
 
-  private fun View.assertClickRedirectTo(expectedRedirectionUri: URI) {
+  private fun View.assertClickRedirectTo(
+      expectedRedirectionUri: URI,
+      notifyAdMobListener: Boolean
+  ) {
     clearInvocations(redirection)
     clearInvocations(adListener)
 
@@ -204,7 +213,8 @@ class CriteoNativeAdapterTest {
         any()
     )
 
-    verify(adListener).onAdClicked()
+    val quantifier = if (notifyAdMobListener) times(1) else never()
+    verify(adListener, quantifier).onAdClicked()
   }
 
   private fun View.assertDisplayTriggerImpressionPixels(expectedPixels: List<URL>) {

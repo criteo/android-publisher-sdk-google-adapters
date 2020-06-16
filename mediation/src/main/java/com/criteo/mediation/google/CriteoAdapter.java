@@ -109,7 +109,7 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
         if (initialize(context, serverParameter, null, FormatType.NATIVE, listener)) {
             CriteoNativeLoader loader = new CriteoNativeLoader(
                 nativeAdUnit,
-                new CriteoNativeEventListener(listener),
+                new CriteoNativeEventListener(context, listener),
                 new NoOpNativeRenderer()
             );
 

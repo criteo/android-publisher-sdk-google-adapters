@@ -3,6 +3,7 @@ package com.criteo.mediation.google.advancednative
 import com.criteo.publisher.CriteoErrorCode
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import org.junit.Before
 import org.junit.Test
@@ -20,7 +21,7 @@ class CriteoNativeEventListenerTest {
   fun setUp() {
     MockitoAnnotations.initMocks(this)
 
-    listener = CriteoNativeEventListener(adMobListener)
+    listener = CriteoNativeEventListener(mock(), adMobListener)
   }
 
   @Test
