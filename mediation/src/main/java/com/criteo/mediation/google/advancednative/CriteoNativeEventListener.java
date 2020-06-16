@@ -2,10 +2,10 @@ package com.criteo.mediation.google.advancednative;
 
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import com.criteo.mediation.google.ErrorCode;
 import com.criteo.publisher.CriteoErrorCode;
 import com.criteo.publisher.advancednative.CriteoNativeAd;
 import com.criteo.publisher.advancednative.CriteoNativeAdListener;
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
 import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
 
@@ -26,8 +26,7 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
 
     @Override
     public void onAdFailedToReceive(@NonNull CriteoErrorCode errorCode) {
-        // TODO map error code
-        adMobListener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
+        adMobListener.onAdFailedToLoad(ErrorCode.toAdMob(errorCode));
     }
 
     private static class CriteoUnifiedNativeAdMapper extends UnifiedNativeAdMapper {

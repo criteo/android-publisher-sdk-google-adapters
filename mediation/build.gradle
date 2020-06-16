@@ -61,7 +61,14 @@ dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
 
     testImplementation("junit:junit:4.13")
+    testImplementation("org.mockito:mockito-core:3.3.0")
+    testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    testImplementation("org.assertj:assertj-core:3.16.1")
     testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
+        exclude(group: "com.android.support")
+    }
+    testImplementation("com.google.android.gms:play-services-ads:19.1.0") {
         exclude(group: "com.android.support")
     }
 
