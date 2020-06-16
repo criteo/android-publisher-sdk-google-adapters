@@ -17,6 +17,7 @@ import com.criteo.publisher.mock.MockBean
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.AdUnit
+import com.criteo.publisher.network.PubSdkApi
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.formats.UnifiedNativeAd
 import com.google.android.gms.ads.formats.UnifiedNativeAdView
@@ -28,6 +29,7 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import java.net.URI
+import java.net.URL
 import java.util.concurrent.CountDownLatch
 import javax.inject.Inject
 
@@ -63,6 +65,9 @@ class CriteoNativeAdapterTest {
 
   @MockBean
   private lateinit var redirection: Redirection
+
+  @SpyBean
+  private lateinit var api: PubSdkApi
 
   @Mock
   private lateinit var adListener: AdListener
@@ -123,7 +128,9 @@ class CriteoNativeAdapterTest {
     // Click
     adView.assertClickRedirectTo(expectedProduct.clickUrl)
 
-    // TODO impression
+    // Impression
+    adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
+
     // TODO AdChoice
   }
 
@@ -198,6 +205,21 @@ class CriteoNativeAdapterTest {
     )
 
     verify(adListener).onAdClicked()
+  }
+
+  private fun View.assertDisplayTriggerImpressionPixels(expectedPixels: List<URL>) {
+    clearInvocations(adListener)
+
+    scenarioRule.scenario.onActivity {
+      it.setContentView(this)
+    }
+    mockedDependenciesRule.waitForIdleState()
+
+    verify(adListener).onAdImpression()
+
+    expectedPixels.forEach {
+      verify(api).executeRawGet(it)
+    }
   }
 
 }

@@ -37,6 +37,11 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
         adMobListener.onAdClicked();
     }
 
+    @Override
+    public void onAdImpression() {
+        adMobListener.onAdImpression();
+    }
+
     private static class CriteoUnifiedNativeAdMapper extends UnifiedNativeAdMapper {
 
         private final WeakReference<CriteoNativeAd> nativeAdRef;
@@ -58,10 +63,9 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             // TODO advertiser logo setIcon();
             // TODO setAdChoicesContent();
 
-            // Click
+            // Click & impression
             setOverrideClickHandling(true);
-
-            // TODO impression
+            setOverrideImpressionRecording(true);
 
             nativeAdRef = new WeakReference<>(nativeAd);
         }
