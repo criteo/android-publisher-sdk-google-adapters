@@ -1,11 +1,13 @@
 package com.criteo.publisher.advancednative;
 
 import android.view.View;
+import android.widget.ImageView;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import java.net.URL;
 
 public class NativeInternal {
 
@@ -36,6 +38,16 @@ public class NativeInternal {
       @NonNull CriteoNativeAd nativeAd,
       @NonNull CriteoNativeRenderer renderer) {
     nativeAd.setRenderer(new AdChoiceOverlayNativeRenderer(renderer));
+  }
+
+  @NonNull
+  public static ImageView getImageView(@NonNull CriteoMediaView mediaView) {
+    return mediaView.getImageView();
+  }
+
+  @NonNull
+  public static URL getImageUrl(@NonNull CriteoMedia mediaContent) {
+    return mediaContent.getImageUrl();
   }
 
 }

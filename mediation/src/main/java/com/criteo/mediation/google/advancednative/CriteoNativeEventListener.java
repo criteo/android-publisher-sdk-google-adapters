@@ -1,5 +1,7 @@
 package com.criteo.mediation.google.advancednative;
 
+import static com.criteo.mediation.google.PreconditionsUtil.isNotNull;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
@@ -75,19 +77,30 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             bundle.putString(CRT_NATIVE_ADV_DOMAIN, nativeAd.getAdvertiserDomain());
             setExtras(bundle);
 
-            // TODO advertiser logo setIcon();
-
             if (context != null) {
+                MediaAndLogoRenderer mediaAndLogoRenderer = new MediaAndLogoRenderer();
+                NativeInternal.setRenderer(nativeAd, mediaAndLogoRenderer);
+                // createNativeRenderedView calls both createNativeView and renderNativeView of the
+                // renderer, so images are now currently being loaded
+                View nativeRenderedView = nativeAd.createNativeRenderedView(context, null);
+
                 // Product media
-                ProductMediaRenderer renderer = new ProductMediaRenderer();
-                NativeInternal.setRenderer(nativeAd, renderer);
-                View renderedAd = nativeAd.createNativeRenderedView(context, null);
-                setMediaView(renderer.getLastProductMediaView());
+                setMediaView(mediaAndLogoRenderer.getProductMediaView());
                 setHasVideoContent(false);
 
+                // Advertiser logo
+                CriteoMediaView iconCriteoMediaView = mediaAndLogoRenderer.getAdvertiserLogoView();
+                if (isNotNull(iconCriteoMediaView)) {
+                    IconNativeAdImage iconImage = IconNativeAdImage.create(
+                        iconCriteoMediaView,
+                        nativeAd.getAdvertiserLogoMedia()
+                    );
+                    setIcon(iconImage);
+                }
+
                 // AdChoice
-                View adChoiceView = NativeInternal.getAdChoiceView(nativeAd, renderedAd);
-                if (adChoiceView != null) {
+                View adChoiceView = NativeInternal.getAdChoiceView(nativeAd, nativeRenderedView);
+                if (isNotNull(adChoiceView)) {
                     adChoiceView.setTag(AD_CHOICE_TAG);
                     setAdChoicesContent(adChoiceView);
                 }
@@ -123,21 +136,30 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
         }
     }
 
-    private static class ProductMediaRenderer implements CriteoNativeRenderer {
+    private static class MediaAndLogoRenderer implements CriteoNativeRenderer {
 
         @Nullable
-        private CriteoMediaView lastProductMediaView;
+        private CriteoMediaView productMediaView;
 
         @Nullable
-        public CriteoMediaView getLastProductMediaView() {
-            return lastProductMediaView;
+        private CriteoMediaView advertiserLogoView;
+
+        @Nullable
+        public CriteoMediaView getProductMediaView() {
+            return productMediaView;
+        }
+
+        @Nullable
+        public CriteoMediaView getAdvertiserLogoView() {
+            return advertiserLogoView;
         }
 
         @NonNull
         @Override
         public View createNativeView(@NonNull Context context, @Nullable ViewGroup parent) {
-            lastProductMediaView = new CriteoMediaView(context);
-            return lastProductMediaView;
+            productMediaView = new CriteoMediaView(context);
+            advertiserLogoView = new CriteoMediaView(context);
+            return new View(context);
         }
 
         @Override
@@ -146,8 +168,11 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             @NonNull View nativeView,
             @NonNull CriteoNativeAd nativeAd
         ) {
-            if (lastProductMediaView != null) {
-                helper.setMediaInView(nativeAd.getProductMedia(), lastProductMediaView);
+            if (isNotNull(productMediaView)) {
+                helper.setMediaInView(nativeAd.getProductMedia(), productMediaView);
+            }
+            if (isNotNull(advertiserLogoView)) {
+                helper.setMediaInView(nativeAd.getAdvertiserLogoMedia(), advertiserLogoView);
             }
         }
     }

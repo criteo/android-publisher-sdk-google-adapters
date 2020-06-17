@@ -16,13 +16,15 @@ import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
 import com.criteo.publisher.StubConstants
 import com.criteo.publisher.TestAdUnits
 import com.criteo.publisher.advancednative.CriteoMediaView
-import com.criteo.publisher.advancednative.drawable
+import com.criteo.publisher.advancednative.NativeInternal
 import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockBean
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.AdUnit
+import com.criteo.publisher.model.Slot
+import com.criteo.publisher.model.nativeads.NativeAssets
 import com.criteo.publisher.network.PubSdkApi
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.formats.MediaView
@@ -33,6 +35,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.AdditionalAnswers.delegatesTo
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import java.net.URI
@@ -112,9 +115,10 @@ class CriteoNativeAdapterTest {
       layout.addView(createTextView(context, DESCRIPTION_TAG, it.body))
       layout.addView(createTextView(context, PRICE_TAG, it.price))
       layout.addView(createTextView(context, CALL_TO_ACTION_TAG, it.callToAction))
-      layout.addView(createTextView(context, ADVERTISER_DOMAIN_TAG, it.extras["crtn_advdomain"] as String))
+      layout.addView(createTextView(context, ADVERTISER_DOMAIN_TAG, it.extras["crtn_advdomain"] as String?))
       layout.addView(createTextView(context, ADVERTISER_DESCRIPTION_TAG, it.advertiser))
       layout.addView(adView.createMediaView(context, it.mediaContent))
+      layout.addView(createImageView(context, ADVERTISER_LOGO_TAG, it.icon.drawable))
 
       adView.addView(layout)
       adView.setNativeAd(it)
@@ -147,10 +151,12 @@ class CriteoNativeAdapterTest {
     adView.assertClickRedirectTo(expectedProduct.clickUrl, true)
     adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
 
-    // Product media
+    // Images
     assertThat(adView.mediaView.findDrawable()).isNotNull
-
-    // TODO advertiser logo
+    assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isNotNull.satisfies {
+      assertThat(it?.intrinsicWidth).isGreaterThan(0)
+      assertThat(it?.intrinsicHeight).isGreaterThan(0)
+    }
   }
 
   @Test
@@ -188,10 +194,22 @@ class CriteoNativeAdapterTest {
     doAnswer {
       val realBidManager = mockingDetails(it.mock).mockCreationSettings.spiedInstance as BidManager
       realBidManager.getBidForAdUnitAndPrefetch(adUnit)
+          ?.updateAdvertiserLogoWithSupportedImage()
     }.whenever(bidManager).getBidForAdUnitAndPrefetch(any())
   }
 
-  private fun createTextView(context: Context, tag: Any, text: String): TextView {
+  private fun Slot.updateAdvertiserLogoWithSupportedImage(): Slot {
+    // The advertiser logo returned by the stub of CDB is an SVG, which is not supported.
+    // To test that the adapter works correctly for the logo, we need to swap it with a supported
+    // image. Such as the product one.
+    val nativeAssets = mock<NativeAssets>(defaultAnswer = delegatesTo(nativeAssets!!))
+    whenever(nativeAssets.advertiserLogoUrl).doReturn(this.nativeAssets!!.product.imageUrl)
+    val spiedSlot = spy(this)
+    whenever(spiedSlot.nativeAssets).doReturn(nativeAssets)
+    return spiedSlot
+  }
+
+  private fun createTextView(context: Context, tag: Any, text: String?): TextView {
     val view = TextView(context)
     view.tag = tag
     view.text = text
@@ -205,12 +223,23 @@ class CriteoNativeAdapterTest {
     return view
   }
 
+  private fun createImageView(context: Context, tag: Any, drawable: Drawable?): ImageView {
+    val view = ImageView(context)
+    view.tag = tag
+    view.setImageDrawable(drawable)
+    return view
+  }
+
   private fun View.findTextWithTag(tag: Any): CharSequence {
     return findViewWithTag<TextView>(tag).text
   }
 
+  private fun View.findDrawableWithTag(tag: Any): Drawable? {
+    return findViewWithTag<ImageView>(tag).drawable
+  }
+
   private fun MediaView.findDrawable(): Drawable? {
-    return (getChildAt(0) as CriteoMediaView).drawable
+    return NativeInternal.getImageView(getChildAt(0) as CriteoMediaView).drawable
   }
 
   private fun View.assertClickRedirectTo(
