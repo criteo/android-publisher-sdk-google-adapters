@@ -5,7 +5,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import com.criteo.publisher.advancednative.CriteoMedia;
 import com.criteo.publisher.advancednative.CriteoMediaView;
-import com.criteo.publisher.advancednative.NativeInternal;
+import com.criteo.publisher.advancednative.NativeInternalForAdMob;
 import com.google.android.gms.ads.formats.NativeAd;
 
 class IconNativeAdImage extends NativeAd.Image {
@@ -26,8 +26,8 @@ class IconNativeAdImage extends NativeAd.Image {
       @NonNull CriteoMediaView iconCriteoMediaView,
       @NonNull CriteoMedia mediaContent
   ) {
-    Drawable drawable = new IconViewDrawable(NativeInternal.getImageView(iconCriteoMediaView));
-    Uri uri = Uri.parse(NativeInternal.getImageUrl(mediaContent).toString());
+    Drawable drawable = new IconViewDrawable(NativeInternalForAdMob.getImageView(iconCriteoMediaView));
+    Uri uri = Uri.parse(NativeInternalForAdMob.getImageUrl(mediaContent).toString());
     return new IconNativeAdImage(drawable, uri);
   }
 

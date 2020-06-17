@@ -16,7 +16,7 @@ import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
 import com.criteo.publisher.StubConstants
 import com.criteo.publisher.TestAdUnits
 import com.criteo.publisher.advancednative.CriteoMediaView
-import com.criteo.publisher.advancednative.NativeInternal
+import com.criteo.publisher.advancednative.NativeInternalForAdMob
 import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockBean
@@ -239,7 +239,7 @@ class CriteoNativeAdapterTest {
   }
 
   private fun MediaView.findDrawable(): Drawable? {
-    return NativeInternal.getImageView(getChildAt(0) as CriteoMediaView).drawable
+    return NativeInternalForAdMob.getImageView(getChildAt(0) as CriteoMediaView).drawable
   }
 
   private fun View.assertClickRedirectTo(

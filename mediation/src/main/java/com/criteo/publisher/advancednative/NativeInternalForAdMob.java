@@ -9,7 +9,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import java.net.URL;
 
-public class NativeInternal {
+public class NativeInternalForAdMob {
 
   /**
    * This class serves as a bridge between this adapter and the internals (package-private) of the
@@ -21,7 +21,7 @@ public class NativeInternal {
    */
   @Keep
   @RestrictTo(Scope.LIBRARY)
-  public NativeInternal() {
+  public NativeInternalForAdMob() {
     // no-op
   }
 

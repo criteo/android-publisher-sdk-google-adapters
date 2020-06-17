@@ -15,7 +15,7 @@ import com.criteo.publisher.advancednative.CriteoMediaView;
 import com.criteo.publisher.advancednative.CriteoNativeAd;
 import com.criteo.publisher.advancednative.CriteoNativeAdListener;
 import com.criteo.publisher.advancednative.CriteoNativeRenderer;
-import com.criteo.publisher.advancednative.NativeInternal;
+import com.criteo.publisher.advancednative.NativeInternalForAdMob;
 import com.criteo.publisher.advancednative.RendererHelper;
 import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
 import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
@@ -79,7 +79,7 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
 
             if (context != null) {
                 MediaAndLogoRenderer mediaAndLogoRenderer = new MediaAndLogoRenderer();
-                NativeInternal.setRenderer(nativeAd, mediaAndLogoRenderer);
+                NativeInternalForAdMob.setRenderer(nativeAd, mediaAndLogoRenderer);
                 // createNativeRenderedView calls both createNativeView and renderNativeView of the
                 // renderer, so images are now currently being loaded
                 View nativeRenderedView = nativeAd.createNativeRenderedView(context, null);
@@ -99,7 +99,7 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
                 }
 
                 // AdChoice
-                View adChoiceView = NativeInternal.getAdChoiceView(nativeAd, nativeRenderedView);
+                View adChoiceView = NativeInternalForAdMob.getAdChoiceView(nativeAd, nativeRenderedView);
                 if (isNotNull(adChoiceView)) {
                     adChoiceView.setTag(AD_CHOICE_TAG);
                     setAdChoicesContent(adChoiceView);
@@ -123,14 +123,14 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
             if (nativeAd != null) {
                 // The renderer is expected to do nothing, but the SDK will start to watch this view
                 // for clicks and impressions
-                NativeInternal.setRenderer(nativeAd, new NoOpNativeRenderer());
+                NativeInternalForAdMob.setRenderer(nativeAd, new NoOpNativeRenderer());
                 nativeAd.renderNativeView(containerView);
 
                 // As the AdChoice icon is not injected by the SDK, we should explicitly set the
                 // click listeners dedicated to AdChoice
                 View adChoiceView = containerView.findViewWithTag(AD_CHOICE_TAG);
                 if (adChoiceView != null) {
-                    NativeInternal.setAdChoiceClickableView(nativeAd, adChoiceView);
+                    NativeInternalForAdMob.setAdChoiceClickableView(nativeAd, adChoiceView);
                 }
             }
         }
