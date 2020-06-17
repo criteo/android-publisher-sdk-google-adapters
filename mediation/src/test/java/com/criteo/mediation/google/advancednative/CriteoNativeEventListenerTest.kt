@@ -38,4 +38,33 @@ class CriteoNativeEventListenerTest {
     verify(adMobListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR)
   }
 
+  @Test
+  fun onAdClicked_GivenAdMobListener_ReportToIt() {
+    listener.onAdClicked()
+
+    verify(adMobListener).onAdClicked()
+  }
+
+  @Test
+  fun onAdImpression_GivenAdMobListener_ReportToIt() {
+    listener.onAdImpression()
+
+    verify(adMobListener).onAdImpression()
+  }
+
+  @Test
+  fun onAdLeftApplication_GivenAdMobListener_ReportToIt() {
+    listener.onAdLeftApplication()
+
+    verify(adMobListener).onAdOpened()
+    verify(adMobListener).onAdLeftApplication()
+  }
+
+  @Test
+  fun onAdClosed_GivenAdMobListener_ReportToIt() {
+    listener.onAdClosed()
+
+    verify(adMobListener).onAdClosed()
+  }
+
 }

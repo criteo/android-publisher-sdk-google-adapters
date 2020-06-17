@@ -61,6 +61,17 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
         adMobListener.onAdImpression();
     }
 
+    @Override
+    public void onAdLeftApplication() {
+        adMobListener.onAdOpened();
+        adMobListener.onAdLeftApplication();
+    }
+
+    @Override
+    public void onAdClosed() {
+        adMobListener.onAdClosed();
+    }
+
     private static class CriteoUnifiedNativeAdMapper extends UnifiedNativeAdMapper {
 
         private final WeakReference<CriteoNativeAd> nativeAdRef;
