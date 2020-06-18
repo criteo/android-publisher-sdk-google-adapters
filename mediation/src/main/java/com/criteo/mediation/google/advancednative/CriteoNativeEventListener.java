@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -43,7 +44,7 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
 
     @Override
     public void onAdReceived(@NonNull CriteoNativeAd nativeAd) {
-        adMobListener.onAdLoaded(new CriteoUnifiedNativeAdMapper(contextRef.get(), nativeAd));
+        adMobListener.onAdLoaded(new CriteoUnifiedNativeAdMapper(contextRef.get(), nativeAd, this));
     }
 
     @Override
@@ -76,7 +77,24 @@ public class CriteoNativeEventListener extends CriteoNativeAdListener {
 
         private final WeakReference<CriteoNativeAd> nativeAdRef;
 
-        CriteoUnifiedNativeAdMapper(@Nullable Context context, CriteoNativeAd nativeAd) {
+        /**
+         * Hold the listener until the end of life of this ad
+         * <p>
+         * Normally it is the job of the native loader to hold the listener. But in case of this
+         * adapter, the loader is thrown directly and nothing prevent the listener to be GC. So it is
+         * hold here.
+         */
+        @Keep
+        @NonNull
+        private final CriteoNativeAdListener listener;
+
+        CriteoUnifiedNativeAdMapper(
+            @Nullable Context context,
+            @NonNull CriteoNativeAd nativeAd,
+            @NonNull CriteoNativeAdListener listener
+        ) {
+            this.listener = listener;
+
             // Text fields
             setHeadline(nativeAd.getTitle());
             setBody(nativeAd.getDescription());
