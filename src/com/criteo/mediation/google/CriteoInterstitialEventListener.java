@@ -10,7 +10,7 @@ import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialL
 public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener,
         CriteoInterstitialAdDisplayListener {
 
-    private CustomEventInterstitialListener customEventInterstitialListener;
+    private final CustomEventInterstitialListener customEventInterstitialListener;
 
     public CriteoInterstitialEventListener(CustomEventInterstitialListener listener) {
         customEventInterstitialListener = listener;
@@ -18,20 +18,7 @@ public class CriteoInterstitialEventListener implements CriteoInterstitialAdList
 
     @Override
     public void onAdFailedToReceive(CriteoErrorCode code) {
-        switch (code) {
-            case ERROR_CODE_INTERNAL_ERROR:
-                customEventInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-                break;
-            case ERROR_CODE_NETWORK_ERROR:
-                customEventInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_NETWORK_ERROR);
-                break;
-            case ERROR_CODE_INVALID_REQUEST:
-                customEventInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
-                break;
-            case ERROR_CODE_NO_FILL:
-                customEventInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-                break;
-        }
+        customEventInterstitialListener.onAdFailedToLoad(ErrorCode.toAdMob(code));
     }
 
     @Override
