@@ -48,3 +48,6 @@ obj/
 
 #locally compiled and copied publisher-sdk aar
 publisher-sdk-release/publisher-sdk-release.aar
+
+# Secret file
+env.secret.sh

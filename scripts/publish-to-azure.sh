@@ -5,11 +5,10 @@
 
 set -Eeou pipefail
 
-function upload() {
-  # TODO EE-926 Get those credentials from a vault
-  export AZURE_STORAGE_ACCOUNT=pubsdkuseprod
-  export AZURE_STORAGE_KEY=IBXkbamPEDzFFvLFgjL8bG5v7GOLy/2HY2xMVtgXICxSXG/AYYP57Xme9lxNgcoaznc2XGdye/zDT7fPUYrXbA==
+export AZURE_STORAGE_ACCOUNT="$AZURE_USER"
+export AZURE_STORAGE_KEY="$AZURE_PASSWORD"
 
+function upload() {
   container_name="publishersdk"
   file_to_upload="$1"
   blob_name="android/$1"
