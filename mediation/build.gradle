@@ -62,6 +62,13 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        // Picasso wants an old version, but MockWebServer needs a recent one.
+        force("com.squareup.okhttp3:okhttp:4.7.2")
+    }
+}
+
 dependencies {
     // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
     //  relying on dynamic version.
