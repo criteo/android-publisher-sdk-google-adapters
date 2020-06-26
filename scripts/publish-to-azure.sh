@@ -5,9 +5,6 @@
 
 set -Eeou pipefail
 
-export AZURE_STORAGE_ACCOUNT="$AZURE_USER"
-export AZURE_STORAGE_KEY="$AZURE_PASSWORD"
-
 function upload() {
   container_name="publishersdk"
   file_to_upload="$1"
