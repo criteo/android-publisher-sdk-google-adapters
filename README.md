@@ -13,9 +13,8 @@ selected, and you will end up with your local version.
 # Given the mochi folder is next to this adapter folder (and you are at the root of this adapter
 # folder)
 
-# You need to append the timestamp to differentiate your version against prod/preprod versions.
-# Moreover, this allows you to differentiate your own local versions.
-pushd ../mochi && ./gradlew clean publishToMavenLocal -PappendTimestamp=true && popd
+# A timestamp is automatically added to differentiate between prod and preprod versions.
+pushd ../mochi && ./gradlew clean publishToMavenLocal && popd
 
 # It is published, you need to refresh the dependencies
 ./gradlew clean build --refresh-dependencies
@@ -33,7 +32,7 @@ The `adapter_base_version` should be bumped in the [project level build.gradle f
 ## Building and publishing the adapter to the production repository
 
 ```shell script
-./gradlew clean :mediation:publishReleasePublicationToAzureRepository
+./do-release.sh
 ```
 
 ## Publishing the adapter on GitHub

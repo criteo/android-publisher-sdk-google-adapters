@@ -12,4 +12,4 @@ echo "Building and publishing artifacts to nexus"
 ./scripts/do-pre-submit.sh
 
 # The Nexus prod is acting as a preprod
-./gradlew publishReleasePublicationToNexusProdRepository -PappendTimestamp=true
+./gradlew publishReleasePublicationToNexusProdRepository
