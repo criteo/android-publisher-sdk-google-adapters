@@ -151,6 +151,28 @@ afterEvaluate {
                             }
                         }
                     }
+
+                    name = "$groupId:$artifactId"
+                    description = "Criteo Direct Bidding for App solution with AdMob mediation platform"
+                    url = "https://publisherdocs.criteotilt.com/app/android/mediation/admob/"
+
+                    licenses {
+                        license {
+                            name = "Apache License, Version 2.0"
+                            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                            distribution = "repo"
+                        }
+                    }
+
+                    developers {
+                        // We rely on Git to recognize contributors
+                    }
+
+                    scm {
+                        url = "http://github.com/criteo/android-publisher-sdk-google-adapters/tree/master"
+                        connection = "scm:git:git://github.com/criteo/android-publisher-sdk-google-adapters.git"
+                        developerConnection = "scm:git:ssh://github.com:criteo/android-publisher-sdk-google-adapters.git"
+                    }
                 }
             }
         }
