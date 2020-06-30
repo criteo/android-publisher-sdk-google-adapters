@@ -112,35 +112,38 @@ dependencies {
 
 def azureLocalRepository = "${buildDir}/azure-${adapter_publication_version}"
 
-publishing {
-    publications {
-        release(MavenPublication) {
-            groupId = "com.criteo.mediation.google"
-            artifactId = "criteo-adapter"
-            version adapter_publication_version
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from(components["release"])
+                groupId = "com.criteo.mediation.google"
+                artifactId = "criteo-adapter"
+                version adapter_publication_version
 
-            artifact("$buildDir/outputs/aar/mediation-release.aar") {
-                afterEvaluate {
-                    builtBy(tasks["bundleReleaseAar"])
-                }
-            }
+                pom {
+                    withXml {
+                        asNode()["dependencies"]["dependency"].forEach {
+                            if (it["groupId"].text() == "com.criteo.publisher") {
+                                // Reset the version to remove the dynamic part
+                                it["version"][0].value = sdk_version
+                            }
 
-            pom {
-                packaging = "aar"
-
-                withXml {
-                    def dependenciesNode = asNode().appendNode("dependencies")
-
-                    def dependencyNode = dependenciesNode.appendNode("dependency")
-                    dependencyNode.appendNode("groupId", "com.criteo.publisher")
-                    dependencyNode.appendNode("artifactId", "criteo-publisher-sdk")
-                    dependencyNode.appendNode("version", "$sdk_version")
-                    dependencyNode.appendNode("type", "aar")
+                            if (it["artifactId"].text() == "multidex") {
+                                // Multidex is added for the tests so that we can use any
+                                // dependencies we want. The adapter in itself is really small and
+                                // we should not impose this to publishers, so lets remove it.
+                                it.parent().remove(it)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
 
+publishing {
     with nexusPreProdRepository
     with nexusProdRepository
     with devRepository
