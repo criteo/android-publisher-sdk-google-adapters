@@ -38,6 +38,8 @@ allprojects {
         jcenter()
         // TODO:  uncomment after EE-1126 is done.
         // mavenLocal()
+        // TODO Remove this after migrating to another repository. This eases the migration: while
+        //  SDK is not migrated, we can fetch it from Nexus
         maven { url "http://nexus.criteo.prod/content/groups/android/" }
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
     }
@@ -65,42 +67,11 @@ ext {
 
     sdk_version = ext.adapter_version.substring(0, ext.adapter_version.lastIndexOf('.'))
 
-    nexusPreProdRepository = {
-        repositories {
-            maven {
-                name 'NexusPreProd'
-                url "http://nexus.criteo.preprod/content/repositories/criteo.android.releases/"
-                with mavenCredentialsIfPresent()
-            }
-        }
-    }
-
-    nexusProdRepository = {
-        repositories {
-            maven {
-                name 'NexusProd'
-                url "http://nexus.criteo.prod/content/repositories/criteo.android.releases/"
-                with mavenCredentialsIfPresent()
-            }
-        }
-    }
-
     devRepository = {
         repositories {
             maven {
                 name = "Dev"
                 setUrl("file://${buildDir}/dev-${adapter_publication_version}")
-            }
-        }
-    }
-}
-
-def mavenCredentialsIfPresent() {
-    return {
-        if (System.getenv('MAVEN_USER')) {
-            credentials {
-                username = System.getenv('MAVEN_USER')
-                password = System.getenv('MAVEN_PASSWORD')
             }
         }
     }
