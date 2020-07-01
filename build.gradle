@@ -41,6 +41,8 @@ allprojects {
         // TODO Remove this after migrating to another repository. This eases the migration: while
         //  SDK is not migrated, we can fetch it from Nexus
         maven { url "http://nexus.criteo.prod/content/groups/android/" }
+        // TODO EE-1167: remove this once development artifacts are sync on jcenter
+        maven { url  "https://dl.bintray.com/criteo/mobile" }
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
     }
 }
