@@ -1,0 +1,77 @@
+/*
+ *    Copyright 2020 Criteo
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.6.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        // TODO:  uncomment after EE-1126 is done.
+        // mavenLocal()
+        // TODO EE-1167: remove this once development artifacts are sync on jcenter
+        maven { url  "https://dl.bintray.com/criteo/mobile" }
+        maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
+    }
+}
+
+// Share publication configuration for subProjects
+ext {
+    /**
+     * Current adapter version
+     *
+     * The three first digits correspond to the version of the PublisherSDK that is linked to this adapter.
+     * The last digit is an incremental version of this adapter for this PublisherSDK version.
+     *
+     * This means, that every time a new PublisherSDK is deployed (version A.B.C), then a new adapter should be
+     * deployed as well with version A.B.C.0. If fixes, or updates are required on the adapter without updating
+     * the SDK, then the last digit is incremented to produce A.B.C.1, then A.B.C.2, ...
+     */
+    adapter_version = "3.7.0.0"
+    isSnapshot = properties["isRelease"] != "true"
+
+    def timestamp = new Date().format("yyyyMMdd.HHmm")
+    adapter_publication_version = ext.isSnapshot
+            ? "${ext.adapter_version}-$timestamp"
+            : ext.adapter_version
+
+    sdk_version = ext.adapter_version.substring(0, ext.adapter_version.lastIndexOf('.'))
+
+    devRepository = {
+        repositories {
+            maven {
+                name = "Dev"
+                setUrl("file://${buildDir}/dev-${adapter_publication_version}")
+            }
+        }
+    }
+}

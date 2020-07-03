@@ -1,0 +1,234 @@
+/*
+ *    Copyright 2020 Criteo
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+plugins {
+    id "com.android.library"
+    id "maven-publish"
+    id "kotlin-android"
+    id("com.vanniktech.android.javadoc") version "0.3.0"
+    id("com.jfrog.bintray") version "1.8.5"
+}
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode 1
+        versionName "$adapter_version"
+        multiDexEnabled true
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            debuggable false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            debuggable true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+
+    packagingOptions {
+        // Both AssertJ and ByteBuddy (via Mockito) brings this and the duplication yield an error
+        exclude 'META-INF/licenses/ASM'
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        // Picasso wants an old version, but MockWebServer needs a recent one.
+        force("com.squareup.okhttp3:okhttp:4.7.2")
+    }
+}
+
+dependencies {
+    if (isSnapshot) {
+        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_version+")
+    } else {
+        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version")
+    }
+    debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
+
+    compileOnly("androidx.annotation:annotation:1.0.0")
+
+    compileOnly("com.google.android.gms:play-services-ads:19.1.0") {
+        exclude(group: "com.android.support")
+    }
+
+    implementation("androidx.multidex:multidex:2.0.1")
+
+    testImplementation("junit:junit:4.13")
+    testImplementation("org.mockito:mockito-core:3.3.0")
+    testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    testImplementation("org.assertj:assertj-core:3.16.1")
+    testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
+        exclude(group: "com.android.support")
+    }
+    testImplementation("com.google.android.gms:play-services-ads:19.1.0") {
+        exclude(group: "com.android.support")
+    }
+
+    androidTestImplementation("androidx.test:runner:1.2.0")
+    androidTestImplementation("androidx.test:core:1.2.0")
+    androidTestImplementation("androidx.test:rules:1.2.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.1")
+    androidTestImplementation("androidx.legacy:legacy-support-core-utils:1.0.0")
+    androidTestImplementation("org.mockito:mockito-android:3.3.0")
+    androidTestImplementation("org.jetbrains.kotlin:kotlin-stdlib")
+    androidTestImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    androidTestImplementation("org.assertj:assertj-core:3.16.1")
+    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
+        exclude(group: "com.android.support")
+    }
+    androidTestImplementation("com.google.android.gms:play-services-ads:19.1.0") {
+        exclude(group: "com.android.support")
+    }
+}
+
+task generateReleaseSourcesJar(type: Jar) {
+    group = "documentation"
+    description = "Generate a source JAR."
+
+    archiveClassifier.set("sources")
+    from(android.sourceSets["main"].java.srcDirs)
+}
+
+def publicationDescription = "Criteo Direct Bidding for App solution with AdMob mediation platform"
+def publicationWebsite = "https://publisherdocs.criteotilt.com/app/android/mediation/admob/"
+def githubUrl = "http://github.com/criteo/android-publisher-sdk-google-adapters"
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            afterEvaluate {
+                from(components["release"])
+                artifact(tasks["generateReleaseSourcesJar"])
+                artifact(tasks["generateReleaseJavadocJar"])
+            }
+
+            groupId = "com.criteo.mediation.google"
+            version adapter_publication_version
+
+            if (isSnapshot) {
+                artifactId = "criteo-adapter-development"
+            } else {
+                artifactId = "criteo-adapter"
+            }
+
+            pom {
+                withXml {
+                    asNode()["dependencies"]["dependency"].forEach {
+                        if (it["artifactId"].text() == "multidex") {
+                            // Multidex is added for the tests so that we can use any
+                            // dependencies we want. The adapter in itself is really small and
+                            // we should not impose this to publishers, so lets remove it.
+                            it.parent().remove(it)
+                        }
+                    }
+                }
+
+                name = "$groupId:$artifactId"
+                description = publicationDescription
+                url = publicationWebsite
+
+                licenses {
+                    license {
+                        name = "Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution = "repo"
+                    }
+                }
+
+                developers {
+                    // We rely on Git to recognize contributors
+                }
+
+                scm {
+                    url = githubUrl
+                    connection = "scm:git:git://github.com/criteo/android-publisher-sdk-google-adapters.git"
+                    developerConnection = "scm:git:ssh://github.com:criteo/android-publisher-sdk-google-adapters.git"
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv("BINTRAY_USER")
+    key = System.getenv("BINTRAY_PASSWORD")
+    publish = true
+    publications = ["release"]
+
+    pkg {
+        repo = "mobile"
+        userOrg = "criteo"
+        name = "publisher-sdk-google-adapters"
+        desc = publicationDescription
+        websiteUrl = publicationWebsite
+        vcsUrl = githubUrl
+        licenses = ["Apache-2.0"]
+        publicDownloadNumbers = true
+
+        version {
+            name = adapter_publication_version
+        }
+    }
+}
+
+def azureLocalRepository = "${buildDir}/azure-${adapter_publication_version}"
+publishing {
+    with devRepository
+
+    repositories {
+        maven {
+            // TODO EE-915 Find a way to make the upload from Gradle rather than relying on bash script
+            name = "azure"
+            url = "file://${azureLocalRepository}"
+        }
+    }
+}
+
+task uploadToAzure {
+    doLast {
+        exec {
+            commandLine "bash", "../scripts/publish-to-azure.sh", "${azureLocalRepository}"
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository).all {
+    if (name.contains("Azure")) {
+        it.finalizedBy uploadToAzure
+    }
+}
