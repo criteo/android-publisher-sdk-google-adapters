@@ -126,7 +126,7 @@ task generateReleaseSourcesJar(type: Jar) {
 
 def publicationDescription = "Criteo Direct Bidding for App solution with AdMob mediation platform"
 def publicationWebsite = "https://publisherdocs.criteotilt.com/app/android/mediation/admob/"
-def githubUrl = "http://github.com/criteo/android-publisher-sdk-google-adapters"
+def githubUrl = "https://github.com/criteo/android-publisher-sdk-google-adapters"
 
 publishing {
     publications {
