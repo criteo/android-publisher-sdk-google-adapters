@@ -36,11 +36,8 @@ allprojects {
     repositories {
         google()
         jcenter()
-        // TODO:  uncomment after EE-1126 is done.
-        // mavenLocal()
-        // TODO EE-1167: remove this once development artifacts are sync on jcenter
-        maven { url  "https://dl.bintray.com/criteo/mobile" }
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
+        mavenLocal()
     }
 }
 
