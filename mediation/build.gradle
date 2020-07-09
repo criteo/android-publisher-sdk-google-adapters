@@ -206,29 +206,6 @@ bintray {
     }
 }
 
-def azureLocalRepository = "${buildDir}/azure-${adapter_publication_version}"
 publishing {
     with devRepository
-
-    repositories {
-        maven {
-            // TODO EE-915 Find a way to make the upload from Gradle rather than relying on bash script
-            name = "azure"
-            url = "file://${azureLocalRepository}"
-        }
-    }
-}
-
-task uploadToAzure {
-    doLast {
-        exec {
-            commandLine "bash", "../scripts/publish-to-azure.sh", "${azureLocalRepository}"
-        }
-    }
-}
-
-tasks.withType(PublishToMavenRepository).all {
-    if (name.contains("Azure")) {
-        it.finalizedBy uploadToAzure
-    }
 }
