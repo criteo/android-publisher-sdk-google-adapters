@@ -22,12 +22,17 @@ jobs:
         run: ./gradlew build assembleAndroidTest --info --stacktrace
 
       - name: Junit Report to Annotations
-        uses: ashley-taylor/junit-report-annotations-action@1.2
-        if: always()
+        uses: ashley-taylor/junit-report-annotations-action@1.3
+        if: failure()
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
-          path: "**/TEST-*.xml"
-          testSrcPath: "mediation/src/test/java"
+
+      - name: Upload JUnit report
+        uses: actions/upload-artifact@master
+        if: failure()
+        with:
+          name: junit-report
+          path: "**/build/reports/tests"
 
   android-tests:
     runs-on: macos-latest
@@ -52,8 +57,12 @@ jobs:
           name: logcat
           path: artifacts/logcat.log
 
-      # It is not possible to use the junit-report-annotations-action as for java test.
-      # MacOS will be supported on next version: https://github.com/ashley-taylor/junit-report-annotations-action/issues/8
+      - name: Junit Report to Annotations
+        uses: ashley-taylor/junit-report-annotations-action@1.3
+        if: failure()
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload JUnit report
         uses: actions/upload-artifact@master
         if: failure()
