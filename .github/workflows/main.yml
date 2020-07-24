@@ -28,7 +28,7 @@ jobs:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JUnit report
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         if: failure()
         with:
           name: junit-report
@@ -51,7 +51,7 @@ jobs:
           cmd: ./gradlew connectedCheck
 
       - name: Upload logcat output
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         if: failure()
         with:
           name: logcat
@@ -64,7 +64,7 @@ jobs:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JUnit report
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         if: failure()
         with:
           name: junit-report
