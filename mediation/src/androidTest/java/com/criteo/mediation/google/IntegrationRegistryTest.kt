@@ -1,4 +1,4 @@
-package com.criteo.mediation
+package com.criteo.mediation.google
 
 import com.criteo.publisher.integration.Integration
 import com.criteo.publisher.integration.IntegrationRegistry
