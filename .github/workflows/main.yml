@@ -48,7 +48,7 @@ jobs:
         with:
           api: 29
           tag: google_apis
-          cmd: ./gradlew connectedCheck
+          cmd: ./gradlew gordon
 
       - name: Upload logcat output
         uses: actions/upload-artifact@main
@@ -68,7 +68,7 @@ jobs:
         if: failure()
         with:
           name: junit-report
-          path: "**/build/reports/androidTests"
+          path: "**/build/reports"
 
   deploy-development-artifacts:
     runs-on: ubuntu-latest

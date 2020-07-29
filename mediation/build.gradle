@@ -20,7 +20,10 @@ plugins {
     id "kotlin-android"
     id("com.vanniktech.android.javadoc") version "0.3.0"
     id("com.jfrog.bintray") version "1.8.5"
+    id("com.banno.gordon")
 }
+
+gordon.retryQuota = 3
 
 android {
     compileSdkVersion 29
