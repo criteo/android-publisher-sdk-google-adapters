@@ -39,7 +39,7 @@ import com.criteo.publisher.mock.MockBean
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.AdUnit
-import com.criteo.publisher.model.Slot
+import com.criteo.publisher.model.CdbResponseSlot
 import com.criteo.publisher.model.nativeads.NativeAssets
 import com.criteo.publisher.network.PubSdkApi
 import com.google.android.gms.ads.*
@@ -214,7 +214,7 @@ class CriteoNativeAdapterTest {
     }.whenever(bidManager).getBidForAdUnitAndPrefetch(any())
   }
 
-  private fun Slot.updateAdvertiserLogoWithSupportedImage(): Slot {
+  private fun CdbResponseSlot.updateAdvertiserLogoWithSupportedImage(): CdbResponseSlot {
     // The advertiser logo returned by the stub of CDB is an SVG, which is not supported.
     // To test that the adapter works correctly for the logo, we need to swap it with a supported
     // image. Such as the product one.
