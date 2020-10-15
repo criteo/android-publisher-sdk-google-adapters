@@ -39,7 +39,7 @@ import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListene
 import java.lang.ref.WeakReference;
 import java.util.Map;
 
-public class CriteoNativeEventListener extends CriteoNativeAdListener {
+public class CriteoNativeEventListener implements CriteoNativeAdListener {
 
     private static final String CRT_NATIVE_ADV_DOMAIN = "crtn_advdomain";
 

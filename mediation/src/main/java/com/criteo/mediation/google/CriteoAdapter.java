@@ -25,11 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.criteo.mediation.google.advancednative.CriteoNativeEventListener;
 import com.criteo.mediation.google.advancednative.NoOpNativeRenderer;
-import com.criteo.publisher.Criteo;
-import com.criteo.publisher.CriteoBannerAdListener;
-import com.criteo.publisher.CriteoBannerView;
-import com.criteo.publisher.CriteoInitException;
-import com.criteo.publisher.CriteoInterstitial;
+import com.criteo.publisher.*;
 import com.criteo.publisher.advancednative.CriteoNativeLoader;
 import com.criteo.publisher.model.AdUnit;
 import com.criteo.publisher.model.BannerAdUnit;
@@ -39,18 +35,14 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
 import com.google.android.gms.ads.mediation.NativeMediationAdRequest;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBanner;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitial;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventNative;
-import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
-import java.util.Collections;
+import com.google.android.gms.ads.mediation.customevent.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial, CustomEventNative {
+import java.util.Collections;
+
+public class CriteoAdapter
+        implements CustomEventBanner, CustomEventInterstitial, CustomEventNative {
 
     protected static final String TAG = CriteoAdapter.class.getSimpleName();
 
@@ -96,11 +88,10 @@ public class CriteoAdapter implements CustomEventBanner, CustomEventInterstitial
             MediationAdRequest mediationAdRequest,
             Bundle customEventExtras) {
         if (initialize(context, serverParameter, null, FormatType.INTERSTITIAL, listener)) {
-            criteoInterstitial = new CriteoInterstitial(context, interstitialAdUnit);
+            criteoInterstitial = new CriteoInterstitial(interstitialAdUnit);
             CriteoInterstitialEventListener criteoInterstitialEventListener = new CriteoInterstitialEventListener(
                 listener);
             criteoInterstitial.setCriteoInterstitialAdListener(criteoInterstitialEventListener);
-            criteoInterstitial.setCriteoInterstitialAdDisplayListener(criteoInterstitialEventListener);
 
             criteoInterstitial.loadAd();
         }

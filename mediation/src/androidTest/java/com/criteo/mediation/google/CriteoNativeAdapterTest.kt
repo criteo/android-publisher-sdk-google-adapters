@@ -27,6 +27,7 @@ import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.google.activity.DummyActivity
 import com.criteo.mediation.google.advancednative.CriteoNativeEventListener.AD_CHOICE_TAG
+import com.criteo.publisher.BidListener
 import com.criteo.publisher.BidManager
 import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
 import com.criteo.publisher.StubConstants
@@ -208,10 +209,18 @@ class CriteoNativeAdapterTest {
     // replace it by a test AdUnit.
 
     doAnswer {
+      val listener: BidListener = it.getArgument(1)
       val realBidManager = mockingDetails(it.mock).mockCreationSettings.spiedInstance as BidManager
-      realBidManager.getBidForAdUnitAndPrefetch(adUnit)
-          ?.updateAdvertiserLogoWithSupportedImage()
-    }.whenever(bidManager).getBidForAdUnitAndPrefetch(any())
+      realBidManager.getBidForAdUnit(adUnit, object : BidListener {
+        override fun onBidResponse(cdbResponseSlot: CdbResponseSlot) {
+          listener.onBidResponse(cdbResponseSlot.updateAdvertiserLogoWithSupportedImage())
+        }
+
+        override fun onNoBid() {
+          listener.onNoBid()
+        }
+      })
+    }.whenever(bidManager).getBidForAdUnit(any(), any())
   }
 
   private fun CdbResponseSlot.updateAdvertiserLogoWithSupportedImage(): CdbResponseSlot {
