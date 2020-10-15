@@ -17,8 +17,9 @@
 package com.criteo.mediation.google;
 
 
-import android.view.View;
+import androidx.annotation.NonNull;
 import com.criteo.publisher.CriteoBannerAdListener;
+import com.criteo.publisher.CriteoBannerView;
 import com.criteo.publisher.CriteoErrorCode;
 import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
 
@@ -31,12 +32,12 @@ public class CriteoBannerEventListener implements CriteoBannerAdListener {
     }
 
     @Override
-    public void onAdReceived(View view) {
+    public void onAdReceived(@NonNull CriteoBannerView view) {
         customEventBannerListener.onAdLoaded(view);
     }
 
     @Override
-    public void onAdFailedToReceive(CriteoErrorCode code) {
+    public void onAdFailedToReceive(@NonNull CriteoErrorCode code) {
         customEventBannerListener.onAdFailedToLoad(ErrorCode.toAdMob(code));
     }
 
@@ -48,16 +49,6 @@ public class CriteoBannerEventListener implements CriteoBannerAdListener {
     @Override
     public void onAdClicked() {
         customEventBannerListener.onAdClicked();
-    }
-
-    @Override
-    public void onAdOpened() {
-        customEventBannerListener.onAdOpened();
-    }
-
-    @Override
-    public void onAdClosed() {
-        customEventBannerListener.onAdClosed();
     }
 
 }

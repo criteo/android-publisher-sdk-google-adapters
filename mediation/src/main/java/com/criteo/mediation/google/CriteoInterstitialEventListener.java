@@ -17,19 +17,23 @@
 package com.criteo.mediation.google;
 
 
+import androidx.annotation.NonNull;
 import com.criteo.publisher.CriteoErrorCode;
-import com.criteo.publisher.CriteoInterstitialAdDisplayListener;
+import com.criteo.publisher.CriteoInterstitial;
 import com.criteo.publisher.CriteoInterstitialAdListener;
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
 
-public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener,
-        CriteoInterstitialAdDisplayListener {
+public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener {
 
     private final CustomEventInterstitialListener customEventInterstitialListener;
 
     public CriteoInterstitialEventListener(CustomEventInterstitialListener listener) {
         customEventInterstitialListener = listener;
+    }
+
+    @Override
+    public void onAdReceived(@NonNull CriteoInterstitial interstitial) {
+        customEventInterstitialListener.onAdLoaded();
     }
 
     @Override
@@ -55,19 +59,5 @@ public class CriteoInterstitialEventListener implements CriteoInterstitialAdList
     @Override
     public void onAdClicked() {
         customEventInterstitialListener.onAdClicked();
-    }
-
-    @Override
-    public void onAdReadyToDisplay() {
-        customEventInterstitialListener.onAdLoaded();
-    }
-
-    @Override
-    public void onAdFailedToDisplay(CriteoErrorCode code) {
-        customEventInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_NETWORK_ERROR);
-    }
-
-    @Override
-    public void onAdReceived() {
     }
 }
