@@ -91,7 +91,7 @@ public class CriteoNativeEventListener implements CriteoNativeAdListener {
 
     private static class CriteoUnifiedNativeAdMapper extends UnifiedNativeAdMapper {
 
-        private final WeakReference<CriteoNativeAd> nativeAdRef;
+        private final CriteoNativeAd nativeAd;
 
         /**
          * Hold the listener until the end of life of this ad
@@ -155,7 +155,7 @@ public class CriteoNativeEventListener implements CriteoNativeAdListener {
             setOverrideClickHandling(true);
             setOverrideImpressionRecording(true);
 
-            nativeAdRef = new WeakReference<>(nativeAd);
+            this.nativeAd = nativeAd;
         }
 
         @Override
@@ -164,8 +164,6 @@ public class CriteoNativeEventListener implements CriteoNativeAdListener {
             Map<String, View> clickableAssetViews,
             Map<String, View> nonClickableAssetViews
         ) {
-            CriteoNativeAd nativeAd = nativeAdRef.get();
-            if (nativeAd != null) {
                 // The renderer is expected to do nothing, but the SDK will start to watch this view
                 // for clicks and impressions
                 NativeInternalForAdMob.setRenderer(nativeAd, new NoOpNativeRenderer());
@@ -178,7 +176,6 @@ public class CriteoNativeEventListener implements CriteoNativeAdListener {
                     NativeInternalForAdMob.setAdChoiceClickableView(nativeAd, adChoiceView);
                 }
             }
-        }
     }
 
     private static class MediaAndLogoRenderer implements CriteoNativeRenderer {
