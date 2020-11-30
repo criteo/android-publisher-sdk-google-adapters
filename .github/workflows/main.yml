@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.0.7
+        uses: malinskiy/action-android/install-sdk@release/0.0.8
 
       - name: Build & Run Java tests
         run: ./gradlew build assembleAndroidTest
@@ -42,10 +42,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.0.7
+        uses: malinskiy/action-android/install-sdk@release/0.0.8
 
       - name: Run Android tests
-        uses: malinskiy/action-android/emulator-run-cmd@release/0.0.7
+        uses: malinskiy/action-android/emulator-run-cmd@release/0.0.8
         with:
           api: 29
           tag: google_apis
@@ -86,7 +86,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.0.7
+        uses: malinskiy/action-android/install-sdk@release/0.0.8
 
       - name: Deploy artifacts
         env:
