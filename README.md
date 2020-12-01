@@ -16,7 +16,7 @@ allprojects {
 Then, in your app's module *build.gradle* file, add the following implementation configuration to the *dependencies* section:
 
 ```kotlin
-implementation 'com.criteo.mediation.google:criteo-adapter:4.0.0.1'
+implementation 'com.criteo.mediation.google:criteo-adapter:4.1.0.0'
 ```
 
 # License

@@ -5,6 +5,9 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 
 ## Next
 
+## Version 4.1.0.0 
+* No changes on the adapter.
+
 ## Version 4.0.0.1
 * Fix nativeAds clicking/tracking in AdMob
 
