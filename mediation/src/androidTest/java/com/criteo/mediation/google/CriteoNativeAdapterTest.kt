@@ -36,6 +36,7 @@ import com.criteo.publisher.advancednative.CriteoMediaView
 import com.criteo.publisher.advancednative.NativeInternalForAdMob
 import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
+import com.criteo.publisher.context.ContextData
 import com.criteo.publisher.mock.MockBean
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
@@ -209,9 +210,10 @@ class CriteoNativeAdapterTest {
     // replace it by a test AdUnit.
 
     doAnswer {
-      val listener: BidListener = it.getArgument(1)
+      val context: ContextData = it.getArgument(1)
+      val listener: BidListener = it.getArgument(2)
       val realBidManager = mockingDetails(it.mock).mockCreationSettings.spiedInstance as BidManager
-      realBidManager.getBidForAdUnit(adUnit, object : BidListener {
+      realBidManager.getBidForAdUnit(adUnit, context, object : BidListener {
         override fun onBidResponse(cdbResponseSlot: CdbResponseSlot) {
           listener.onBidResponse(cdbResponseSlot.updateAdvertiserLogoWithSupportedImage())
         }
@@ -220,7 +222,7 @@ class CriteoNativeAdapterTest {
           listener.onNoBid()
         }
       })
-    }.whenever(bidManager).getBidForAdUnit(any(), any())
+    }.whenever(bidManager).getBidForAdUnit(any(), any(), any())
   }
 
   private fun CdbResponseSlot.updateAdvertiserLogoWithSupportedImage(): CdbResponseSlot {
