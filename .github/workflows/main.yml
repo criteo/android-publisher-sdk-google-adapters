@@ -90,6 +90,7 @@ jobs:
 
       - name: Deploy artifacts
         env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
-        run: ./gradlew bintrayUpload
+        run: ./gradlew bintrayUpload sendReleaseDeployedToBintrayMessageToSlack

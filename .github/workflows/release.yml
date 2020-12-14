@@ -15,9 +15,9 @@ jobs:
       - name: Set up Android SDK
         uses: malinskiy/action-android/install-sdk@release/0.0.8
 
-      # TODO (EE-1126): Add slack integration (like in SDK)
       - name: Deploy artifacts
         env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
-        run: ./gradlew bintrayUpload -PisRelease=true
+        run: ./gradlew bintrayUpload sendReleaseDeployedToBintrayMessageToSlack -PisRelease=true
