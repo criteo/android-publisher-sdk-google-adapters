@@ -21,6 +21,7 @@ plugins {
     id("com.vanniktech.android.javadoc") version "0.3.0"
     id("com.jfrog.bintray") version "1.8.5"
     id("com.banno.gordon")
+    id("fr.pturpin.slack-publish") version "0.2.0"
 }
 
 gordon.retryQuota = 3
@@ -226,4 +227,63 @@ bintray {
 
 publishing {
     with devRepository
+}
+
+import com.slack.api.model.block.composition.BlockCompositions
+
+afterEvaluate {
+    publishing.publications.withType(MavenPublication) { mavenPublication ->
+        slack {
+            messages.register("${name}DeployedToBintray") {
+                webHook.set(System.getenv("SLACK_WEBHOOK"))
+
+                payload({
+                    if (isSnapshot) {
+                        it.channel = "#pub-sdk-release-candidates"
+                    } else {
+                        it.channel = "#pub-sdk-private"
+                    }
+                    it.username = "Android AdMob Mediation Adapter Release"
+                    it.iconEmoji = ":android:"
+                })
+
+                publication({
+                    it.publicName.set("Adapter for AdMob Mediation")
+                    it.publication(mavenPublication)
+                    it.repositoryName.set("Bintray")
+                })
+
+                if (isSnapshot) {
+                    git({})
+                }
+
+                changelog({ block ->
+                    block.version.set(adapter_version)
+                    block.versionLinesStartWith("## Version")
+
+                    if (isSnapshot) {
+                        // On snapshots, we show the changelog in a code block so we can copy/paste it.
+                        block.format({
+                            it.section(true, {
+                                it.text = BlockCompositions.markdownText("```${block.changelog.get()}```")
+                            })
+                        })
+                    }
+                })
+
+                if (isSnapshot) {
+                    context {
+                        it.markdown(
+                                """
+*Release the RC*
+- Create a <${githubUrl}/releases/new|new GitHub release> and insert:
+- Tag version, target, Release title: `v${adapter_version}`
+- Description: the changelog above
+""".stripIndent()
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
