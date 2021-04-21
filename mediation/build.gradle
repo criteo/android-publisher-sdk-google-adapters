@@ -19,7 +19,6 @@ plugins {
     id "maven-publish"
     id "kotlin-android"
     id("com.vanniktech.android.javadoc") version "0.3.0"
-    id("com.jfrog.bintray") version "1.8.5"
     id("com.banno.gordon")
     id("fr.pturpin.slack-publish") version "0.2.0"
     id("signing")
@@ -198,40 +197,6 @@ publishing {
     }
 }
 
-bintray {
-    user = System.getenv("BINTRAY_USER")
-    key = System.getenv("BINTRAY_KEY")
-    publish = true
-    publications = ["release"]
-
-    pkg {
-        repo = "mobile"
-        userOrg = "criteo"
-
-        // Use different package name for debug and release artifacts:
-        // The synchronization with JCenter was done when only debug artifacts were present. Now,
-        // when release artifacts are pushed in the debug package, they are not synchronized on
-        // JCenter.
-        // It does not seem possible to reset the synchronization. Hence, a new package dedicated
-        // to release artifacts is used.
-        if (isSnapshot) {
-            name = "publisher-sdk-google-adapters"
-        } else {
-            name = "$groupId:$artifactId"
-        }
-
-        desc = publicationDescription
-        websiteUrl = publicationWebsite
-        vcsUrl = githubUrl
-        licenses = ["Apache-2.0"]
-        publicDownloadNumbers = true
-
-        version {
-            name = adapter_publication_version
-        }
-    }
-}
-
 publishing {
     with devRepository
 }
@@ -251,7 +216,7 @@ import com.slack.api.model.block.composition.BlockCompositions
 afterEvaluate {
     publishing.publications.withType(MavenPublication) { mavenPublication ->
         slack {
-            messages.register("${name}DeployedToBintray") {
+            messages.register("${name}DeployedToSonatype") {
                 webHook.set(System.getenv("SLACK_WEBHOOK"))
 
                 payload({
@@ -267,7 +232,7 @@ afterEvaluate {
                 publication({
                     it.publicName.set("Adapter for AdMob Mediation")
                     it.publication(mavenPublication)
-                    it.repositoryName.set("Bintray")
+                    it.repositoryName.set("Maven Central")
                 })
 
                 if (isSnapshot) {
