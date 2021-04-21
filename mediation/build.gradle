@@ -22,6 +22,7 @@ plugins {
     id("com.jfrog.bintray") version "1.8.5"
     id("com.banno.gordon")
     id("fr.pturpin.slack-publish") version "0.2.0"
+    id("signing")
 }
 
 gordon.retryQuota = 3
@@ -77,11 +78,11 @@ configurations.all {
 
 dependencies {
     if (isSnapshot) {
-        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_version+")
+        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_dev_dynamic_version")
     } else {
         releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version")
     }
-    debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
+    debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_dev_dynamic_version")
 
     compileOnly("androidx.annotation:annotation:1.0.0")
 
@@ -96,7 +97,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     testImplementation("org.assertj:assertj-core:3.16.1")
-    testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
+    testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_dev_dynamic_version") {
         exclude(group: "com.android.support")
     }
     testImplementation("com.google.android.gms:play-services-ads:19.1.0") {
@@ -112,7 +113,7 @@ dependencies {
     androidTestImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     androidTestImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     androidTestImplementation("org.assertj:assertj-core:3.16.1")
-    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
+    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_dev_dynamic_version") {
         exclude(group: "com.android.support")
     }
     androidTestImplementation("com.google.android.gms:play-services-ads:19.1.0") {
@@ -132,7 +133,7 @@ def publicationDescription = "Criteo Direct Bidding for App solution with AdMob 
 def publicationWebsite = "https://publisherdocs.criteotilt.com/app/android/mediation/admob/"
 def githubUrl = "https://github.com/criteo/android-publisher-sdk-google-adapters"
 
-def groupId = "com.criteo.mediation.google"
+def groupId = parent.group
 def artifactId
 if (isSnapshot) {
     artifactId = "criteo-adapter-development"
@@ -179,6 +180,12 @@ publishing {
 
                 developers {
                     // We rely on Git to recognize contributors
+                    developer {
+                        name = "R&D Direct"
+                        email = "rnd-direct@criteo.com"
+                        organization = "Criteo"
+                        organizationUrl = "https://www.criteo.com/"
+                    }
                 }
 
                 scm {
@@ -227,6 +234,16 @@ bintray {
 
 publishing {
     with devRepository
+}
+
+signing {
+    def secretKey = System.getenv("MAVEN_SECRING_GPG_BASE64")
+    def password = System.getenv("SONATYPE_PASSWORD")
+
+    if (secretKey != null && password != null) {
+        useInMemoryPgpKeys(secretKey, password)
+        sign(publishing.publications.withType(MavenPublication))
+    }
 }
 
 import com.slack.api.model.block.composition.BlockCompositions
