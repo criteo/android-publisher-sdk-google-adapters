@@ -91,8 +91,6 @@ jobs:
       - name: Deploy artifacts
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           MAVEN_SECRING_GPG_BASE64: ${{ secrets.MAVEN_SECRING_GPG_BASE64 }}
-        run: ./gradlew publishReleasePublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository sendReleaseDeployedToBintrayMessageToSlack
+        run: ./gradlew publishReleasePublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository sendReleaseDeployedToSonatypeMessageToSlack
