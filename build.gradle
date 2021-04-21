@@ -17,7 +17,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-
     repositories {
         gradlePluginPortal()
         google()
@@ -32,6 +31,10 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+}
+
+plugins {
+    id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
 }
 
 allprojects {
@@ -63,7 +66,23 @@ ext {
             ? "${ext.adapter_version}-$timestamp"
             : ext.adapter_version
 
-    sdk_version = ext.adapter_version.substring(0, ext.adapter_version.lastIndexOf('.'))
+    def adapter_version_tokens = ext.adapter_version.tokenize('.')
+    sdk_version = adapter_version_tokens[0..-2].join('.')
+
+    /**
+     * Compute a dynamic version range for development SDK
+     *
+     * Development SDKs are published for every commit on the main branch. The version has this
+     * format: A.B.C-yyyyMMdd.HHmm. Hence an adapter with the version A.B.C.D should rely on the
+     * latest dev SDK between A.B.C (included) and A.B.C+1 (excluded).
+     *
+     * This is achieved by using the [A.B.C, A.B.C+1[ notation.
+     * Note that, using A.B.C+ is sufficient but, Maven Central does not accept such dynamic
+     * version.
+     */
+    def sdk_next_version_tokens = adapter_version_tokens[0..-3] + [(adapter_version_tokens[-2] as int) + 1]
+    def sdk_next_version = sdk_next_version_tokens.join('.')
+    sdk_dev_dynamic_version = "[$ext.sdk_version,$sdk_next_version["
 
     devRepository = {
         repositories {
@@ -71,6 +90,17 @@ ext {
                 name = "Dev"
                 setUrl("file://${buildDir}/dev-${adapter_publication_version}")
             }
+        }
+    }
+}
+
+group = "com.criteo.mediation.google"
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = "criteo-oss"
+            password = System.getenv("SONATYPE_PASSWORD")
         }
     }
 }

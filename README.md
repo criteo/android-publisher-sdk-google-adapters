@@ -8,7 +8,7 @@ Add the following maven repository into your top-level *build.gradle* file:
 ```kotlin
 allprojects {
     repositories {
-        jcenter()
+        mavenCentral()
     }
 }
 ```
