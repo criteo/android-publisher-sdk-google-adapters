@@ -40,11 +40,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter {
-            content {
-                includeGroup("com.criteo.publisher") // TODO DPP-3180 Remove once SDK is on maven central
-            }
-        }
         maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
         mavenLocal()
     }
