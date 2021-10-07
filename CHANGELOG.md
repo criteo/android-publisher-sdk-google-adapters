@@ -5,6 +5,9 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 
 ## Next
 
+## Version 4.5.0.0
+* No changes on the adapter.
+
 ## Version 4.4.0.0
 * Artifacts are now delivered through `Maven Central` repository instead of `JCenter` which is
   deprecated.
