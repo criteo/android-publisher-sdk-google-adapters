@@ -223,7 +223,7 @@ afterEvaluate {
                     if (isSnapshot) {
                         it.channel = "#pub-sdk-release-candidates"
                     } else {
-                        it.channel = "#pub-sdk-private"
+                        it.channel = "#direct-pub-data-releases"
                     }
                     it.username = "Android AdMob Mediation Adapter Release"
                     it.iconEmoji = ":android:"
