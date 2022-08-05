@@ -181,7 +181,7 @@ publishing {
                     // We rely on Git to recognize contributors
                     developer {
                         name = "R&D Direct"
-                        email = "rnd-direct@criteo.com"
+                        email = "pubsdk-owner@criteo.com"
                         organization = "Criteo"
                         organizationUrl = "https://www.criteo.com/"
                     }
