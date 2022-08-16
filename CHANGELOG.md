@@ -5,6 +5,9 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 
 ## Next
 
+## Version 4.6.1.0
+* Automatically pass COPPA flag from Google SDK to Criteo SDK.
+
 ## Version 4.5.0.0
 * No changes on the adapter.
 
