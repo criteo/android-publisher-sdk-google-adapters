@@ -46,10 +46,10 @@ public class AdapterHelper {
   private final Context context = ApplicationProvider.getApplicationContext();
 
   @NonNull
-  private final MediationAdRequest mediationAdRequest = mock(MediationAdRequest.class);
+  public final MediationAdRequest mediationAdRequest = mock(MediationAdRequest.class);
 
   @NonNull
-  private final NativeMediationAdRequest nativeMediationAdRequest = mock(NativeMediationAdRequest.class);
+  public final NativeMediationAdRequest nativeMediationAdRequest = mock(NativeMediationAdRequest.class);
 
   @NonNull
   private final Bundle customEventExtras = new Bundle();

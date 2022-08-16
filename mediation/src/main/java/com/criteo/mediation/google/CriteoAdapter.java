@@ -166,7 +166,6 @@ public class CriteoAdapter
         AdUnit adUnit = initAdUnit(formatType, adUnitId, size);
 
         try {
-            //noinspection ResultOfMethodCallIgnored
             Criteo.getInstance().setTagForChildDirectedTreatment(tagForChildDirectedTreatment);
             return true;
         } catch (Exception ex) {
