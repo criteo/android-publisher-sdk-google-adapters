@@ -9,11 +9,15 @@ import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.network.PubSdkApi
 import com.criteo.publisher.privacy.ConsentData
-import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import org.mockito.kotlin.check
 
 class ProfileIdFunctionalTest {
 
@@ -38,7 +42,7 @@ class ProfileIdFunctionalTest {
   @Test
   fun loadBanner_GivenSdkUsedOrNot_UseAdapterProfileIdInAllRequests() {
     val adapterHelper = AdapterHelper()
-    adapterHelper.requestBannerAd(BANNER_320_480, mock())
+    adapterHelper.loadBannerAd(BANNER_320_480, mock())
     mockedDependenciesRule.waitForIdleState()
 
     assertAdapterProfileIdIsUsedInAllRequests()
@@ -47,7 +51,7 @@ class ProfileIdFunctionalTest {
   @Test
   fun loadInterstitial_GivenSdkUsedOrNot_UseAdapterProfileIdInAllRequests() {
     val adapterHelper = AdapterHelper()
-    adapterHelper.requestInterstitialAd(INTERSTITIAL, mock())
+    adapterHelper.loadInterstitialAd(INTERSTITIAL, mock())
     mockedDependenciesRule.waitForIdleState()
 
     assertAdapterProfileIdIsUsedInAllRequests()
@@ -56,7 +60,7 @@ class ProfileIdFunctionalTest {
   @Test
   fun loadNative_GivenSdkUsedOrNot_UseAdapterProfileIdInAllRequests() {
     val adapterHelper = AdapterHelper()
-    adapterHelper.requestNativeAd(NATIVE, mock())
+    adapterHelper.loadNativeAd(NATIVE, mock())
     mockedDependenciesRule.waitForIdleState()
 
     assertAdapterProfileIdIsUsedInAllRequests()

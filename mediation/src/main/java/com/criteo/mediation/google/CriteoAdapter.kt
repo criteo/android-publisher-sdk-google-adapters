@@ -14,230 +14,237 @@
  *    limitations under the License.
  */
 
-package com.criteo.mediation.google;
+package com.criteo.mediation.google
 
-import android.app.Application;
-import android.content.Context;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
+import android.app.Application
+import android.content.Context
+import android.util.Log
+import com.criteo.mediation.google.advancednative.CriteoNativeEventLoader
+import com.criteo.publisher.Criteo
+import com.criteo.publisher.CriteoInitException
+import com.criteo.publisher.model.AdUnit
+import com.criteo.publisher.model.BannerAdUnit
+import com.criteo.publisher.model.InterstitialAdUnit
+import com.criteo.publisher.model.NativeAdUnit
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.mediation.Adapter
+import com.google.android.gms.ads.mediation.InitializationCompleteCallback
+import com.google.android.gms.ads.mediation.MediationAdConfiguration
+import com.google.android.gms.ads.mediation.MediationAdLoadCallback
+import com.google.android.gms.ads.mediation.MediationBannerAd
+import com.google.android.gms.ads.mediation.MediationBannerAdCallback
+import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration
+import com.google.android.gms.ads.mediation.MediationConfiguration
+import com.google.android.gms.ads.mediation.MediationInterstitialAd
+import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback
+import com.google.android.gms.ads.mediation.MediationInterstitialAdConfiguration
+import com.google.android.gms.ads.mediation.MediationNativeAdCallback
+import com.google.android.gms.ads.mediation.MediationNativeAdConfiguration
+import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper
+import com.google.android.gms.ads.mediation.VersionInfo
+import org.json.JSONException
+import org.json.JSONObject
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class CriteoAdapter : Adapter() {
 
-import com.criteo.mediation.google.advancednative.CriteoNativeEventListener;
-import com.criteo.mediation.google.advancednative.NoOpNativeRenderer;
-import com.criteo.publisher.Criteo;
-import com.criteo.publisher.CriteoBannerAdListener;
-import com.criteo.publisher.CriteoBannerView;
-import com.criteo.publisher.CriteoInitException;
-import com.criteo.publisher.CriteoInterstitial;
-import com.criteo.publisher.advancednative.CriteoNativeLoader;
-import com.criteo.publisher.model.AdUnit;
-import com.criteo.publisher.model.BannerAdUnit;
-import com.criteo.publisher.model.InterstitialAdUnit;
-import com.criteo.publisher.model.NativeAdUnit;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.mediation.MediationAdRequest;
-import com.google.android.gms.ads.mediation.NativeMediationAdRequest;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBanner;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitial;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventNative;
-import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
+    private lateinit var bannerAdUnit: BannerAdUnit
+    private lateinit var interstitialAdUnit: InterstitialAdUnit
+    private lateinit var nativeAdUnit: NativeAdUnit
 
-import org.json.JSONException;
-import org.json.JSONObject;
+    private lateinit var bannerEventLoader: CriteoBannerEventLoader
+    private lateinit var interstitialEventLoader: CriteoInterstitialEventLoader
+    private lateinit var nativeEventLoader: CriteoNativeEventLoader
 
-import java.util.Collections;
-
-public class CriteoAdapter
-        implements CustomEventBanner, CustomEventInterstitial, CustomEventNative {
-
-    protected static final String TAG = CriteoAdapter.class.getSimpleName();
-
-    protected static final String CRITEO_PUBLISHER_ID = "cpId";
-    protected static final String AD_UNIT_ID = "adUnitId";
-
-    private CriteoInterstitial criteoInterstitial;
-    private BannerAdUnit bannerAdUnit;
-    private InterstitialAdUnit interstitialAdUnit;
-    private NativeAdUnit nativeAdUnit;
-
-    private enum FormatType {
-        BANNER,
-        INTERSTITIAL,
-        NATIVE
+    private enum class FormatType {
+        BANNER, INTERSTITIAL, NATIVE
     }
 
-    /**
-     * The app requested a banner ad
-     */
-    @Override
-    public void requestBannerAd(Context context,
-            CustomEventBannerListener listener,
-            String serverParameter,
-            AdSize size,
-            MediationAdRequest mediationAdRequest,
-            Bundle customEventExtras) {
-        if (initialize(context, serverParameter, size, FormatType.BANNER, listener, getTagForChildDirectedTreatment(mediationAdRequest))) {
-            CriteoBannerView criteoBanner = new CriteoBannerView(context, bannerAdUnit);
-            CriteoBannerAdListener criteoBannerAdListener = new CriteoBannerEventListener(listener);
-            criteoBanner.setCriteoBannerAdListener(criteoBannerAdListener);
-            criteoBanner.loadAd();
-        }
-    }
-
-    /**
-     * The app requested an interstitial ad
-     */
-    @Override
-    public void requestInterstitialAd(Context context,
-            CustomEventInterstitialListener listener,
-            String serverParameter,
-            MediationAdRequest mediationAdRequest,
-            Bundle customEventExtras) {
-        if (initialize(context, serverParameter, null, FormatType.INTERSTITIAL, listener, getTagForChildDirectedTreatment(mediationAdRequest))) {
-            criteoInterstitial = new CriteoInterstitial(interstitialAdUnit);
-            CriteoInterstitialEventListener criteoInterstitialEventListener = new CriteoInterstitialEventListener(
-                listener);
-            criteoInterstitial.setCriteoInterstitialAdListener(criteoInterstitialEventListener);
-
-            criteoInterstitial.loadAd();
-        }
-    }
-
-    @Override
-    public void showInterstitial() {
-        // Show your interstitial ad
-        if (criteoInterstitial != null) {
-            criteoInterstitial.show();
-        }
-    }
-
-    @Override
-    public void requestNativeAd(
-        @NonNull Context context,
-        @NonNull CustomEventNativeListener listener,
-        @Nullable String serverParameter,
-        @Nullable NativeMediationAdRequest nativeMediationAdRequest,
-        @Nullable Bundle bundle
+    override fun loadBannerAd(
+        configuration: MediationBannerAdConfiguration,
+        callback: MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
     ) {
-        if (initialize(context, serverParameter, null, FormatType.NATIVE, listener, getTagForChildDirectedTreatment(nativeMediationAdRequest))) {
-            CriteoNativeLoader loader = new CriteoNativeLoader(
-                nativeAdUnit,
-                new CriteoNativeEventListener(context, listener),
-                new NoOpNativeRenderer()
-            );
-
-            loader.loadAd();
+        if (initialize(
+                configuration,
+                FormatType.BANNER,
+                callback,
+                configuration.taggedForChildDirectedTreatment().toCriteoChildDirectedTreatmentFlag()
+            )
+        ) {
+            bannerEventLoader = CriteoBannerEventLoader(configuration, callback, bannerAdUnit)
+            bannerEventLoader.loadAd()
         }
     }
 
-    private boolean initialize(
-        @NonNull Context context,
-        @Nullable String serverParameter,
-        @Nullable AdSize size,
-        @NonNull FormatType formatType,
-        @NonNull CustomEventListener listener,
-        @Nullable Boolean tagForChildDirectedTreatment
+    override fun loadInterstitialAd(
+        configuration: MediationInterstitialAdConfiguration,
+        callback: MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
     ) {
-        if (TextUtils.isEmpty(serverParameter)) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
-            Log.e(TAG, "Server parameter was empty.");
-            return false;
+        if (initialize(
+                configuration,
+                FormatType.INTERSTITIAL,
+                callback,
+                configuration.taggedForChildDirectedTreatment().toCriteoChildDirectedTreatmentFlag()
+            )
+        ) {
+            interstitialEventLoader = CriteoInterstitialEventLoader(callback, interstitialAdUnit)
+            interstitialEventLoader.loadAd()
         }
+    }
 
-        String criteoPublisherId;
-        String adUnitId;
-        try {
-            JSONObject parameters = new JSONObject(serverParameter);
-            criteoPublisherId = parameters.getString(CRITEO_PUBLISHER_ID);
-            adUnitId = parameters.getString(AD_UNIT_ID);
-        } catch (JSONException e) {
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-            Log.e(TAG, "Adapter failed to read server parameters", e);
-            return false;
+    override fun loadNativeAd(
+        configuration: MediationNativeAdConfiguration,
+        callback: MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback>
+    ) {
+        if (initialize(
+                configuration,
+                FormatType.NATIVE,
+                callback,
+                configuration.taggedForChildDirectedTreatment().toCriteoChildDirectedTreatmentFlag()
+            )
+        ) {
+            nativeEventLoader = CriteoNativeEventLoader(configuration, callback, nativeAdUnit)
+            nativeEventLoader.loadAd()
         }
+    }
 
-        AdUnit adUnit = initAdUnit(formatType, adUnitId, size);
+    override fun initialize(
+        context: Context,
+        initializationCompleteCallback: InitializationCompleteCallback,
+        list: MutableList<MediationConfiguration>
+    ) {
+        // This method is not called for custom events
+    }
 
-        try {
-            Criteo.getInstance().setTagForChildDirectedTreatment(tagForChildDirectedTreatment);
-            return true;
-        } catch (Exception ex) {
-            try {
-                new Criteo.Builder((Application) context.getApplicationContext(), criteoPublisherId)
-                    .adUnits(Collections.singletonList(adUnit))
-                    .tagForChildDirectedTreatment(tagForChildDirectedTreatment)
-                    .init();
-            } catch (CriteoInitException e) {
-                listener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
-                Log.e(TAG, "Adapter failed to initialize", e);
-                return false;
+    override fun getVersionInfo(): VersionInfo {
+        val version = VersionProvider.getMediationAdapterVersionName()
+        val splits = version.split('.')
+        if (splits.size >= 4) {
+            return try {
+                val major = splits[0].toInt()
+                val minor = splits[1].toInt()
+                val micro = splits[2].toInt() * 100 + splits[3].toInt()
+                VersionInfo(major, minor, micro)
+            } catch (ex: NumberFormatException) {
+                DEFAULT_VERSION_INFO
             }
+        }
+        return DEFAULT_VERSION_INFO
+    }
 
-            listener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-            return false;
+    override fun getSDKVersionInfo(): VersionInfo {
+        val sdkVersion = Criteo.getVersion()
+        val splits = sdkVersion.split('.')
+        if (splits.size >= 3) {
+            return try {
+                val major = splits[0].toInt()
+                val minor = splits[1].toInt()
+                val micro = splits[2].toInt()
+                VersionInfo(major, minor, micro)
+            } catch (ex: NumberFormatException) {
+                DEFAULT_VERSION_INFO
+            }
+        }
+        return DEFAULT_VERSION_INFO
+    }
+
+    private fun initialize(
+        mediationAdConfiguration: MediationAdConfiguration,
+        formatType: FormatType,
+        listener: MediationAdLoadCallback<*, *>,
+        tagForChildDirectedTreatment: Boolean?
+    ): Boolean {
+        val serverParameter = mediationAdConfiguration.serverParameters.getString(
+            SERVER_PARAMETER_KEY, ""
+        )
+        if (serverParameter.isNullOrEmpty()) {
+            val error = emptyServerParameterError()
+            listener.onFailure(error)
+            Log.e(TAG, error.message)
+            return false
+        }
+
+        val criteoPublisherId: String
+        val adUnitId: String
+        try {
+            val parameters = JSONObject(serverParameter)
+            criteoPublisherId = parameters.getString(CRITEO_PUBLISHER_ID)
+            adUnitId = parameters.getString(AD_UNIT_ID)
+        } catch (e: JSONException) {
+            val error = readingServerParameterError()
+            listener.onFailure(error)
+            Log.e(TAG, error.message, e)
+            return false
+        }
+
+        val adUnit = initAdUnit(
+            formatType,
+            adUnitId,
+            (mediationAdConfiguration as? MediationBannerAdConfiguration)?.adSize
+        )
+        try {
+            Criteo.getInstance().setTagForChildDirectedTreatment(tagForChildDirectedTreatment)
+            return true
+        } catch (ex: Exception) {
+            try {
+                Criteo.Builder(
+                    (mediationAdConfiguration.context.applicationContext as Application),
+                    criteoPublisherId
+                )
+                    // TODO: move AdUnit creation to separate loaders when prefetch feature is removed
+                    .adUnits(listOf(adUnit))
+                    .tagForChildDirectedTreatment(tagForChildDirectedTreatment)
+                    .init()
+            } catch (e: CriteoInitException) {
+                val error = adapterInitializationError()
+                listener.onFailure(error)
+                Log.e(TAG, error.message, e)
+                return false
+            }
+            listener.onFailure(noFillError())
+            return false
         }
     }
 
-    private AdUnit initAdUnit(
-        @NonNull FormatType formatType,
-        @NonNull String adUnitId,
-        @Nullable AdSize size
-    ) {
-        switch (formatType) {
-            case BANNER:
-                com.criteo.publisher.model.AdSize adMobSize = new com.criteo.publisher.model.AdSize(
-                    size.getWidth(),
-                    size.getHeight()
-                );
-                return bannerAdUnit = new BannerAdUnit(adUnitId, adMobSize);
-            case INTERSTITIAL:
-                return interstitialAdUnit = new InterstitialAdUnit(adUnitId);
-            case NATIVE:
-                return nativeAdUnit = new NativeAdUnit(adUnitId);
-            default:
-                throw new UnsupportedOperationException("Unknown format: " + formatType);
+    private fun initAdUnit(
+        formatType: FormatType,
+        adUnitId: String,
+        size: AdSize?
+    ): AdUnit {
+        return when (formatType) {
+            FormatType.BANNER -> {
+                val adMobSize = com.criteo.publisher.model.AdSize(
+                    size!!.width,
+                    size.height
+                )
+                BannerAdUnit(adUnitId, adMobSize).also { bannerAdUnit = it }
+            }
+            FormatType.INTERSTITIAL -> InterstitialAdUnit(adUnitId).also {
+                interstitialAdUnit = it
+            }
+            FormatType.NATIVE -> NativeAdUnit(adUnitId).also {
+                nativeAdUnit = it
+            }
         }
     }
 
-    @Nullable
-    private Boolean getTagForChildDirectedTreatment(MediationAdRequest request) {
-        switch (request.taggedForChildDirectedTreatment()) {
-            case MediationAdRequest.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE:
-                return true;
-            case MediationAdRequest.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE:
-                return false;
-            default:
-                return null;
+    private fun Int.toCriteoChildDirectedTreatmentFlag(): Boolean? {
+        return when (this) {
+            MediationAdConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE -> true
+            MediationAdConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE -> false
+            else -> null
         }
     }
 
-    /**
-     * The event is being destroyed. Perform any necessary cleanup here.
-     */
-    @Override
-    public void onDestroy() {
+    companion object {
+        private val TAG = CriteoAdapter::class.java.simpleName
+
+        internal const val SERVER_PARAMETER_KEY = "parameter"
+
+        @JvmStatic
+        internal val DEFAULT_VERSION_INFO = VersionInfo(0, 0, 0)
+
+        private const val CRITEO_PUBLISHER_ID = "cpId"
+        private const val AD_UNIT_ID = "adUnitId"
     }
 
-    /**
-     * The app is being paused. This call will only be forwarded to the adapter if the developer notifies mediation that
-     * the app is being paused.
-     */
-    @Override
-    public void onPause() {
-    }
-
-    /**
-     * The app is being resumed. This call will only be forwarded to the adapter if the developer notifies mediation
-     * that the app is being resumed.
-     */
-    @Override
-    public void onResume() {
-    }
 }

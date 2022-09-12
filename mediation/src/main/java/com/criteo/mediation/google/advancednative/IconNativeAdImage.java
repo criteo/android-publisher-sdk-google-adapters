@@ -24,6 +24,7 @@ import com.criteo.publisher.advancednative.CriteoMediaView;
 import com.criteo.publisher.advancednative.NativeInternalForAdMob;
 import com.google.android.gms.ads.formats.NativeAd;
 
+// TODO: NativeAd.Image is deprecated but still there is no method change in UnifiedNativeAdMapper
 class IconNativeAdImage extends NativeAd.Image {
 
   @NonNull

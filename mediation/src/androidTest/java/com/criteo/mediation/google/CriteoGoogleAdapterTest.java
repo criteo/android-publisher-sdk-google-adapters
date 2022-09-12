@@ -23,17 +23,22 @@ import static com.criteo.publisher.TestAdUnits.BANNER_320_50;
 import static com.criteo.publisher.TestAdUnits.INTERSTITIAL;
 import static com.criteo.publisher.TestAdUnits.NATIVE;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.criteo.publisher.CriteoBannerView;
 import com.criteo.publisher.mock.MockedDependenciesRule;
 import com.criteo.publisher.model.AdSize;
-import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
+import com.google.android.gms.ads.mediation.MediationBannerAd;
+import com.google.android.gms.ads.mediation.MediationBannerAdCallback;
+import com.google.android.gms.ads.mediation.MediationInterstitialAd;
+import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback;
+import com.google.android.gms.ads.mediation.MediationNativeAdCallback;
 import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
+
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,29 +54,33 @@ public class CriteoGoogleAdapterTest {
     public MockedDependenciesRule mockedDependenciesRule = new MockedDependenciesRule();
 
     @Mock
-    private CustomEventInterstitialListener interstitialListener;
+    private MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback> interstitialCallback;
 
     @Mock
-    private CustomEventBannerListener bannerListener;
+    private MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> bannerCallback;
 
     @Mock
-    private CustomEventNativeListener nativeListener;
+    private MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback> nativeCallback;
 
     private AdapterHelper adapterHelper;
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         adapterHelper = new AdapterHelper();
+
+        when(interstitialCallback.onSuccess(any())).thenReturn(mock(MediationInterstitialAdCallback.class));
+        when(bannerCallback.onSuccess(any())).thenReturn(mock(MediationBannerAdCallback.class));
+        when(nativeCallback.onSuccess(any())).thenReturn(mock(MediationNativeAdCallback.class));
     }
 
     @Test
     public void requestNativeAd_GivenEmptyServerParameter_NotifyForInvalidRequest() throws Exception {
         String serverParameter = "";
 
-        adapterHelper.requestNativeAd(serverParameter, nativeListener);
+        adapterHelper.loadNativeAd(serverParameter, nativeCallback);
 
-        verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
+        verify(nativeCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.emptyServerParameterError())));
     }
 
     @Test
@@ -80,9 +89,9 @@ public class CriteoGoogleAdapterTest {
         serverParams.put("adUnitId", BANNER_320_50.getAdUnitId());
         String serverParameter = serverParams.toString();
 
-        adapterHelper.requestNativeAd(serverParameter, nativeListener);
+        adapterHelper.loadNativeAd(serverParameter, nativeCallback);
 
-        verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+        verify(nativeCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.readingServerParameterError())));
     }
 
     @Test
@@ -91,18 +100,18 @@ public class CriteoGoogleAdapterTest {
         serverParams.put("cpId", TEST_CP_ID);
         String serverParameter = serverParams.toString();
 
-        adapterHelper.requestNativeAd(serverParameter, nativeListener);
+        adapterHelper.loadNativeAd(serverParameter, nativeCallback);
 
-        verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+        verify(nativeCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.readingServerParameterError())));
     }
 
     @Test
     public void requestBannerAd_GivenEmptyServerParameter_NotifyForInvalidRequest() throws Exception {
         String serverParameter = "";
 
-        adapterHelper.requestBannerAd(serverParameter, new AdSize(320, 50), bannerListener);
+        adapterHelper.loadBannerAd(serverParameter, new AdSize(320, 50), bannerCallback);
 
-        verify(bannerListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
+        verify(bannerCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.emptyServerParameterError())));
     }
 
     @Test
@@ -111,9 +120,9 @@ public class CriteoGoogleAdapterTest {
         serverParams.put("adUnitId", BANNER_320_50.getAdUnitId());
         String serverParameter = serverParams.toString();
 
-        adapterHelper.requestBannerAd(serverParameter, new AdSize(320, 50), bannerListener);
+        adapterHelper.loadBannerAd(serverParameter, new AdSize(320, 50), bannerCallback);
 
-        verify(bannerListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+        verify(bannerCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.readingServerParameterError())));
     }
 
     @Test
@@ -122,18 +131,18 @@ public class CriteoGoogleAdapterTest {
         serverParams.put("cpId", TEST_CP_ID);
         String serverParameter = serverParams.toString();
 
-        adapterHelper.requestBannerAd(serverParameter, new AdSize(320, 50), bannerListener);
+        adapterHelper.loadBannerAd(serverParameter, new AdSize(320, 50), bannerCallback);
 
-        verify(bannerListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+        verify(bannerCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.readingServerParameterError())));
     }
 
     @Test
     public void requestInterstitialAd_GivenEmptyServerParameter_NotifyForInvalidRequest() throws Exception {
         String serverParameter = "";
 
-        adapterHelper.requestInterstitialAd(serverParameter, interstitialListener);
+        adapterHelper.loadInterstitialAd(serverParameter, interstitialCallback);
 
-        verify(interstitialListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INVALID_REQUEST);
+        verify(interstitialCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.emptyServerParameterError())));
     }
 
     @Test
@@ -142,9 +151,9 @@ public class CriteoGoogleAdapterTest {
         serverParams.put("adUnitId", BANNER_320_50.getAdUnitId());
         String serverParameter = serverParams.toString();
 
-        adapterHelper.requestInterstitialAd(serverParameter, interstitialListener);
+        adapterHelper.loadInterstitialAd(serverParameter, interstitialCallback);
 
-        verify(interstitialListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+        verify(interstitialCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.readingServerParameterError())));
     }
 
     @Test
@@ -153,9 +162,9 @@ public class CriteoGoogleAdapterTest {
         serverParams.put("cpId", TEST_CP_ID);
         String serverParameter = serverParams.toString();
 
-        adapterHelper.requestInterstitialAd(serverParameter, interstitialListener);
+        adapterHelper.loadInterstitialAd(serverParameter, interstitialCallback);
 
-        verify(interstitialListener).onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+        verify(interstitialCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.readingServerParameterError())));
     }
 
     @Test
@@ -225,38 +234,38 @@ public class CriteoGoogleAdapterTest {
     }
 
     private void loadValidNative() {
-        adapterHelper.requestNativeAd(NATIVE, nativeListener);
+        adapterHelper.loadNativeAd(NATIVE, nativeCallback);
         mockedDependenciesRule.waitForIdleState();
     }
 
     private void loadValidBanner() {
-        adapterHelper.requestBannerAd(BANNER_320_50, bannerListener);
+        adapterHelper.loadBannerAd(BANNER_320_50, bannerCallback);
         mockedDependenciesRule.waitForIdleState();
     }
 
     private void loadValidInterstitial() {
-        adapterHelper.requestInterstitialAd(INTERSTITIAL, interstitialListener);
+        adapterHelper.loadInterstitialAd(INTERSTITIAL, interstitialCallback);
         mockedDependenciesRule.waitForIdleState();
     }
 
     private void checkMissFirstNativeOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
-        InOrder inOrder = inOrder(nativeListener);
-        inOrder.verify(nativeListener).onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-        inOrder.verify(nativeListener).onAdLoaded(any(UnifiedNativeAdMapper.class));
+        InOrder inOrder = inOrder(nativeCallback);
+        inOrder.verify(nativeCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.noFillError())));
+        inOrder.verify(nativeCallback).onSuccess(any(UnifiedNativeAdMapper.class));
         inOrder.verifyNoMoreInteractions();
     }
 
     private void checkMissFirstBannerOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
-        InOrder inOrder = inOrder(bannerListener);
-        inOrder.verify(bannerListener).onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-        inOrder.verify(bannerListener).onAdLoaded(any(CriteoBannerView.class));
+        InOrder inOrder = inOrder(bannerCallback);
+        inOrder.verify(bannerCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.noFillError())));
+        inOrder.verify(bannerCallback).onSuccess(any(MediationBannerAd.class));
         inOrder.verifyNoMoreInteractions();
     }
 
     private void checkMissFirstInterstitialOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
-        InOrder inOrder = inOrder(interstitialListener);
-        inOrder.verify(interstitialListener).onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
-        inOrder.verify(interstitialListener).onAdLoaded();
+        InOrder inOrder = inOrder(interstitialCallback);
+        inOrder.verify(interstitialCallback).onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.noFillError())));
+        inOrder.verify(interstitialCallback).onSuccess(any(MediationInterstitialAd.class));
         inOrder.verifyNoMoreInteractions();
     }
 }
