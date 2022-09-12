@@ -14,208 +14,183 @@
  *    limitations under the License.
  */
 
-package com.criteo.mediation.google.advancednative;
+package com.criteo.mediation.google.advancednative
 
-import static com.criteo.mediation.google.PreconditionsUtil.isNotNull;
+import android.content.Context
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.Keep
+import com.criteo.mediation.google.isNotNull
+import com.criteo.mediation.google.toAdMobAdError
+import com.criteo.publisher.CriteoErrorCode
+import com.criteo.publisher.advancednative.CriteoMediaView
+import com.criteo.publisher.advancednative.CriteoNativeAd
+import com.criteo.publisher.advancednative.CriteoNativeAdListener
+import com.criteo.publisher.advancednative.CriteoNativeLoader
+import com.criteo.publisher.advancednative.CriteoNativeRenderer
+import com.criteo.publisher.advancednative.NativeInternalForAdMob
+import com.criteo.publisher.advancednative.RendererHelper
+import com.criteo.publisher.model.NativeAdUnit
+import com.google.android.gms.ads.mediation.MediationAdLoadCallback
+import com.google.android.gms.ads.mediation.MediationNativeAdCallback
+import com.google.android.gms.ads.mediation.MediationNativeAdConfiguration
+import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper
 
-import android.content.Context;
-import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
-import androidx.annotation.Keep;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-import com.criteo.mediation.google.ErrorCode;
-import com.criteo.publisher.CriteoErrorCode;
-import com.criteo.publisher.advancednative.CriteoMediaView;
-import com.criteo.publisher.advancednative.CriteoNativeAd;
-import com.criteo.publisher.advancednative.CriteoNativeAdListener;
-import com.criteo.publisher.advancednative.CriteoNativeRenderer;
-import com.criteo.publisher.advancednative.NativeInternalForAdMob;
-import com.criteo.publisher.advancednative.RendererHelper;
-import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
-import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
-import java.lang.ref.WeakReference;
-import java.util.Map;
+class CriteoNativeEventLoader(
+    private val mediationNativeAdConfiguration: MediationNativeAdConfiguration,
+    private val mediationAdLoadCallback: MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback>,
+    private val nativeAdUnit: NativeAdUnit
+) : CriteoNativeAdListener {
 
-public class CriteoNativeEventListener implements CriteoNativeAdListener {
+    private lateinit var mediationNativeAdCallback: MediationNativeAdCallback
 
-    private static final String CRT_NATIVE_ADV_DOMAIN = "crtn_advdomain";
-
-    @VisibleForTesting
-    public static final Object AD_CHOICE_TAG = new Object();
-
-    private final WeakReference<Context> contextRef;
-
-    private final CustomEventNativeListener adMobListener;
-
-    public CriteoNativeEventListener(
-        Context context,
-        CustomEventNativeListener adMobListener
-    ) {
-        this.contextRef = new WeakReference<>(context);
-        this.adMobListener = adMobListener;
+    fun loadAd() {
+        val loader = CriteoNativeLoader(nativeAdUnit, this, NoOpNativeRenderer())
+        loader.loadAd()
     }
 
-    @Override
-    public void onAdReceived(@NonNull CriteoNativeAd nativeAd) {
-        adMobListener.onAdLoaded(new CriteoUnifiedNativeAdMapper(contextRef.get(), nativeAd, this));
+    override fun onAdReceived(nativeAd: CriteoNativeAd) {
+        val mapper = CriteoUnifiedNativeAdMapper(mediationNativeAdConfiguration.context, nativeAd, this)
+        mediationNativeAdCallback = mediationAdLoadCallback.onSuccess(mapper)
     }
 
-    @Override
-    public void onAdFailedToReceive(@NonNull CriteoErrorCode errorCode) {
-        adMobListener.onAdFailedToLoad(ErrorCode.toAdMob(errorCode));
+    override fun onAdFailedToReceive(errorCode: CriteoErrorCode) {
+        mediationAdLoadCallback.onFailure(errorCode.toAdMobAdError())
     }
 
-    @Override
-    public void onAdClicked() {
-        adMobListener.onAdClicked();
+    override fun onAdClosed() {
+        mediationNativeAdCallback.onAdClosed()
     }
 
-    @Override
-    public void onAdImpression() {
-        adMobListener.onAdImpression();
+    override fun onAdImpression() {
+        mediationNativeAdCallback.reportAdImpression()
     }
 
-    @Override
-    public void onAdLeftApplication() {
-        adMobListener.onAdOpened();
-        adMobListener.onAdLeftApplication();
+    override fun onAdClicked() {
+        mediationNativeAdCallback.reportAdClicked()
     }
 
-    @Override
-    public void onAdClosed() {
-        adMobListener.onAdClosed();
+    override fun onAdLeftApplication() {
+        mediationNativeAdCallback.onAdOpened()
+        mediationNativeAdCallback.onAdLeftApplication()
     }
 
-    private static class CriteoUnifiedNativeAdMapper extends UnifiedNativeAdMapper {
-
-        private final CriteoNativeAd nativeAd;
-
+    private class CriteoUnifiedNativeAdMapper(
+        context: Context?,
+        nativeAd: CriteoNativeAd,
         /**
          * Hold the listener until the end of life of this ad
-         * <p>
+         *
+         *
          * Normally it is the job of the native loader to hold the listener. But in case of this
          * adapter, the loader is thrown directly and nothing prevent the listener to be GC. So it is
          * hold here.
          */
-        @Keep
-        @NonNull
-        private final CriteoNativeAdListener listener;
+        @field:Keep private val listener: CriteoNativeAdListener
+    ) : UnifiedNativeAdMapper() {
+        private val nativeAd: CriteoNativeAd
 
-        CriteoUnifiedNativeAdMapper(
-            @Nullable Context context,
-            @NonNull CriteoNativeAd nativeAd,
-            @NonNull CriteoNativeAdListener listener
-        ) {
-            this.listener = listener;
+        init {
 
             // Text fields
-            setHeadline(nativeAd.getTitle());
-            setBody(nativeAd.getDescription());
-            setPrice(nativeAd.getPrice());
-            setCallToAction(nativeAd.getCallToAction());
-            setAdvertiser(nativeAd.getAdvertiserDescription());
-
-            Bundle bundle = new Bundle();
-            bundle.putString(CRT_NATIVE_ADV_DOMAIN, nativeAd.getAdvertiserDomain());
-            setExtras(bundle);
-
+            headline = nativeAd.title
+            body = nativeAd.description
+            price = nativeAd.price
+            callToAction = nativeAd.callToAction
+            advertiser = nativeAd.advertiserDescription
+            val bundle = Bundle()
+            bundle.putString(
+                CRT_NATIVE_ADV_DOMAIN,
+                nativeAd.advertiserDomain
+            )
+            extras = bundle
             if (context != null) {
-                MediaAndLogoRenderer mediaAndLogoRenderer = new MediaAndLogoRenderer();
-                NativeInternalForAdMob.setRenderer(nativeAd, mediaAndLogoRenderer);
+                val mediaAndLogoRenderer = MediaAndLogoRenderer()
+                NativeInternalForAdMob.setRenderer(nativeAd, mediaAndLogoRenderer)
                 // createNativeRenderedView calls both createNativeView and renderNativeView of the
                 // renderer, so images are now currently being loaded
-                View nativeRenderedView = nativeAd.createNativeRenderedView(context, null);
+                val nativeRenderedView = nativeAd.createNativeRenderedView(context, null)
 
                 // Product media
-                setMediaView(mediaAndLogoRenderer.getProductMediaView());
-                setHasVideoContent(false);
+                setMediaView(mediaAndLogoRenderer.productMediaView)
+                setHasVideoContent(false)
 
                 // Advertiser logo
-                CriteoMediaView iconCriteoMediaView = mediaAndLogoRenderer.getAdvertiserLogoView();
-                if (isNotNull(iconCriteoMediaView)) {
-                    IconNativeAdImage iconImage = IconNativeAdImage.create(
+                val iconCriteoMediaView = mediaAndLogoRenderer.advertiserLogoView
+                if (iconCriteoMediaView.isNotNull()) {
+                    val iconImage = IconNativeAdImage.create(
                         iconCriteoMediaView,
-                        nativeAd.getAdvertiserLogoMedia()
-                    );
-                    setIcon(iconImage);
+                        nativeAd.advertiserLogoMedia
+                    )
+                    icon = iconImage
                 }
 
                 // AdChoice
-                View adChoiceView = NativeInternalForAdMob.getAdChoiceView(nativeAd, nativeRenderedView);
-                if (isNotNull(adChoiceView)) {
-                    adChoiceView.setTag(AD_CHOICE_TAG);
-                    setAdChoicesContent(adChoiceView);
+                val adChoiceView =
+                    NativeInternalForAdMob.getAdChoiceView(nativeAd, nativeRenderedView)
+                if (adChoiceView.isNotNull()) {
+                    adChoiceView.tag = AD_CHOICE_TAG
+                    adChoicesContent = adChoiceView
                 }
             }
 
             // Click & impression
-            setOverrideClickHandling(true);
-            setOverrideImpressionRecording(true);
-
-            this.nativeAd = nativeAd;
+            overrideClickHandling = true
+            overrideImpressionRecording = true
+            this.nativeAd = nativeAd
         }
 
-        @Override
-        public void trackViews(
-            View containerView,
-            Map<String, View> clickableAssetViews,
-            Map<String, View> nonClickableAssetViews
+        override fun trackViews(
+            containerView: View,
+            clickableAssetViews: Map<String, View>,
+            nonClickableAssetViews: Map<String, View>
         ) {
-                // The renderer is expected to do nothing, but the SDK will start to watch this view
-                // for clicks and impressions
-                NativeInternalForAdMob.setRenderer(nativeAd, new NoOpNativeRenderer());
-                nativeAd.renderNativeView(containerView);
+            // The renderer is expected to do nothing, but the SDK will start to watch this view
+            // for clicks and impressions
+            NativeInternalForAdMob.setRenderer(nativeAd, NoOpNativeRenderer())
+            nativeAd.renderNativeView(containerView)
 
-                // As the AdChoice icon is not injected by the SDK, we should explicitly set the
-                // click listeners dedicated to AdChoice
-                View adChoiceView = containerView.findViewWithTag(AD_CHOICE_TAG);
-                if (adChoiceView != null) {
-                    NativeInternalForAdMob.setAdChoiceClickableView(nativeAd, adChoiceView);
-                }
+            // As the AdChoice icon is not injected by the SDK, we should explicitly set the
+            // click listeners dedicated to AdChoice
+            val adChoiceView =
+                containerView.findViewWithTag<View>(AD_CHOICE_TAG)
+            if (adChoiceView != null) {
+                NativeInternalForAdMob.setAdChoiceClickableView(nativeAd, adChoiceView)
             }
+        }
     }
 
-    private static class MediaAndLogoRenderer implements CriteoNativeRenderer {
+    private class MediaAndLogoRenderer : CriteoNativeRenderer {
+        lateinit var productMediaView: CriteoMediaView
+            private set
+        lateinit var advertiserLogoView: CriteoMediaView
+            private set
 
-        @Nullable
-        private CriteoMediaView productMediaView;
-
-        @Nullable
-        private CriteoMediaView advertiserLogoView;
-
-        @Nullable
-        public CriteoMediaView getProductMediaView() {
-            return productMediaView;
+        override fun createNativeView(context: Context, parent: ViewGroup?): View {
+            productMediaView = CriteoMediaView(context)
+            advertiserLogoView = CriteoMediaView(context)
+            return View(context)
         }
 
-        @Nullable
-        public CriteoMediaView getAdvertiserLogoView() {
-            return advertiserLogoView;
-        }
-
-        @NonNull
-        @Override
-        public View createNativeView(@NonNull Context context, @Nullable ViewGroup parent) {
-            productMediaView = new CriteoMediaView(context);
-            advertiserLogoView = new CriteoMediaView(context);
-            return new View(context);
-        }
-
-        @Override
-        public void renderNativeView(
-            @NonNull RendererHelper helper,
-            @NonNull View nativeView,
-            @NonNull CriteoNativeAd nativeAd
+        override fun renderNativeView(
+            helper: RendererHelper,
+            nativeView: View,
+            nativeAd: CriteoNativeAd
         ) {
-            if (isNotNull(productMediaView)) {
-                helper.setMediaInView(nativeAd.getProductMedia(), productMediaView);
+            if (productMediaView.isNotNull()) {
+                helper.setMediaInView(nativeAd.productMedia, productMediaView)
             }
-            if (isNotNull(advertiserLogoView)) {
-                helper.setMediaInView(nativeAd.getAdvertiserLogoMedia(), advertiserLogoView);
+            if (advertiserLogoView.isNotNull()) {
+                helper.setMediaInView(nativeAd.advertiserLogoMedia, advertiserLogoView)
             }
         }
+    }
+
+    companion object {
+        private const val CRT_NATIVE_ADV_DOMAIN = "crtn_advdomain"
+
+        @JvmField
+        internal val AD_CHOICE_TAG: Any = Any()
     }
 }

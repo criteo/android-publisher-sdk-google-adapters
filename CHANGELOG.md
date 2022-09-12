@@ -4,6 +4,7 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next
+* Bump AdMob to v20.5.0
 
 ## Version 4.7.0.0
 * Automatically pass COPPA flag from Google SDK to Criteo SDK.

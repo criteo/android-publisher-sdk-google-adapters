@@ -19,19 +19,25 @@ package com.criteo.mediation.google.degraded;
 import static com.criteo.publisher.CriteoUtil.clearCriteo;
 import static com.criteo.publisher.TestAdUnits.BANNER_320_50;
 import static com.criteo.publisher.TestAdUnits.INTERSTITIAL;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.criteo.mediation.google.AdErrorKt;
 import com.criteo.mediation.google.AdapterHelper;
+import com.criteo.mediation.google.IsEqualToOtherAdError;
 import com.criteo.publisher.mock.MockedDependenciesRule;
 import com.criteo.publisher.mock.SpyBean;
 import com.criteo.publisher.model.BannerAdUnit;
 import com.criteo.publisher.model.InterstitialAdUnit;
 import com.criteo.publisher.util.DeviceUtil;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
+import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
+import com.google.android.gms.ads.mediation.MediationBannerAd;
+import com.google.android.gms.ads.mediation.MediationBannerAdCallback;
+import com.google.android.gms.ads.mediation.MediationInterstitialAd;
+import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,10 +50,10 @@ public class CriteoAdapterDegradedTest {
   public MockedDependenciesRule mockedDependenciesRule = new MockedDependenciesRule();
 
   @Mock
-  private CustomEventBannerListener bannerListener;
+  private MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback> interstitialCallback;
 
   @Mock
-  private CustomEventInterstitialListener interstitialListener;
+  private MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> bannerCallback;
 
   @SpyBean
   private DeviceUtil deviceUtil;
@@ -70,8 +76,8 @@ public class CriteoAdapterDegradedTest {
     loadBanner(BANNER_320_50);
     loadBanner(BANNER_320_50);
 
-    verify(bannerListener, times(2))
-        .onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
+    verify(bannerCallback, times(2))
+        .onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.noFillError())));
   }
 
   @Test
@@ -79,17 +85,17 @@ public class CriteoAdapterDegradedTest {
     loadInterstitial(INTERSTITIAL);
     loadInterstitial(INTERSTITIAL);
 
-    verify(interstitialListener, times(2))
-        .onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
+    verify(interstitialCallback, times(2))
+        .onFailure(argThat(new IsEqualToOtherAdError(AdErrorKt.noFillError())));
   }
 
   private void loadBanner(BannerAdUnit adUnit) {
-    adapterHelper.requestBannerAd(adUnit, bannerListener);
+    adapterHelper.loadBannerAd(adUnit, bannerCallback);
     waitForIdleState();
   }
 
   private void loadInterstitial(InterstitialAdUnit adUnit) {
-    adapterHelper.requestInterstitialAd(adUnit, interstitialListener);
+    adapterHelper.loadInterstitialAd(adUnit, interstitialCallback);
     waitForIdleState();
   }
 

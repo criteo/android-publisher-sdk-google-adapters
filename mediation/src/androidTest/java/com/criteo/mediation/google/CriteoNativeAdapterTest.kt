@@ -19,6 +19,7 @@ package com.criteo.mediation.google
 import android.content.ComponentName
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.provider.Settings
 import android.provider.Settings.Secure
 import android.view.View
 import android.widget.ImageView
@@ -26,7 +27,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.google.activity.DummyActivity
-import com.criteo.mediation.google.advancednative.CriteoNativeEventListener.AD_CHOICE_TAG
+import com.criteo.mediation.google.advancednative.CriteoNativeEventLoader;
 import com.criteo.publisher.BidListener
 import com.criteo.publisher.BidManager
 import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
@@ -45,19 +46,27 @@ import com.criteo.publisher.model.CdbResponseSlot
 import com.criteo.publisher.model.nativeads.NativeAssets
 import com.criteo.publisher.network.PubSdkApi
 import com.google.android.gms.ads.*
-import com.google.android.gms.ads.formats.MediaView
-import com.google.android.gms.ads.formats.UnifiedNativeAd
-import com.google.android.gms.ads.formats.UnifiedNativeAdView
-import com.nhaarman.mockitokotlin2.*
+import com.google.android.gms.ads.nativead.MediaView
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.AdditionalAnswers.delegatesTo
 import org.mockito.Mock
+import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
+import org.mockito.kotlin.clearInvocations
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.whenever
 import java.net.URI
 import java.net.URL
+import java.security.MessageDigest
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import javax.inject.Inject
 
@@ -101,9 +110,12 @@ class CriteoNativeAdapterTest {
 
   @Before
   fun setUp() {
-    MockitoAnnotations.initMocks(this)
+    MockitoAnnotations.openMocks(this)
 
-    val deviceId = Secure.getString(context.contentResolver, Secure.ANDROID_ID)
+    // Google requires hashed(MD5) DEVICE_ID
+    val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+      .toMD5()
+      .toUpperCase(Locale.ROOT)
     MobileAds.initialize(context)
     MobileAds.setRequestConfiguration(RequestConfiguration.Builder()
         .setTestDeviceIds(listOf(deviceId))
@@ -115,7 +127,7 @@ class CriteoNativeAdapterTest {
     val expectedAssets = StubConstants.STUB_NATIVE_ASSETS
     val expectedProduct = expectedAssets.product
     val adUnit = TestAdUnits.NATIVE
-    lateinit var adView: UnifiedNativeAdView
+    lateinit var adView: NativeAdView
     val adViewIsRendered = CountDownLatch(1)
 
     // Given
@@ -124,8 +136,8 @@ class CriteoNativeAdapterTest {
     givenAdUnitReplacedBy(adUnit)
 
     // When
-    val adLoader = AdLoader.Builder(context, ADMOB_AD_UNIT_ID).forUnifiedNativeAd {
-      adView = UnifiedNativeAdView(context)
+    val adLoader = AdLoader.Builder(context, ADMOB_AD_UNIT_ID).forNativeAd {
+      adView = NativeAdView(context)
 
       val layout = LinearLayout(context)
       layout.orientation = LinearLayout.VERTICAL
@@ -161,7 +173,7 @@ class CriteoNativeAdapterTest {
     adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
 
     // AdChoice
-    val adChoiceView = adView.findViewWithTag<ImageView>(AD_CHOICE_TAG)
+    val adChoiceView = adView.findViewWithTag<ImageView>(CriteoNativeEventLoader.AD_CHOICE_TAG)
     assertThat(adChoiceView).isNotNull
     assertThat(adChoiceView.drawable).isNotNull
 
@@ -180,7 +192,7 @@ class CriteoNativeAdapterTest {
   @Test
   fun loadNativeAd_GivenInvalidBid_NotifyAdMobForFailure() {
     val adUnit = TestAdUnits.NATIVE_UNKNOWN
-    lateinit var nativeAd: UnifiedNativeAd
+    lateinit var nativeAd: NativeAd
     val adIsReceived = CountDownLatch(1)
 
     // Given
@@ -189,7 +201,7 @@ class CriteoNativeAdapterTest {
     givenAdUnitReplacedBy(adUnit)
 
     // When
-    val adLoader = AdLoader.Builder(context, ADMOB_AD_UNIT_ID).forUnifiedNativeAd {
+    val adLoader = AdLoader.Builder(context, ADMOB_AD_UNIT_ID).forNativeAd {
       nativeAd = it
       adIsReceived.countDown()
     }.build()
@@ -243,7 +255,7 @@ class CriteoNativeAdapterTest {
     return view
   }
 
-  private fun UnifiedNativeAdView.createMediaView(context: Context, mediaContent: MediaContent): MediaView {
+  private fun NativeAdView.createMediaView(context: Context, mediaContent: MediaContent): MediaView {
     val view = MediaView(context)
     mediaView = view
     view.setMediaContent(mediaContent)
@@ -312,4 +324,13 @@ class CriteoNativeAdapterTest {
     }
   }
 
+  private fun String.toMD5(): String {
+    return trim().run {
+      MessageDigest.getInstance("MD5")
+        .digest(toByteArray())
+        .joinToString("") {
+          "%02x".format(it)
+        }
+    }
+  }
 }

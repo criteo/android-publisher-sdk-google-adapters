@@ -14,41 +14,53 @@
  *    limitations under the License.
  */
 
-package com.criteo.mediation.google;
+package com.criteo.mediation.google
 
+import android.view.View
+import com.criteo.publisher.CriteoBannerAdListener
+import com.criteo.publisher.CriteoBannerView
+import com.criteo.publisher.CriteoErrorCode
+import com.criteo.publisher.model.BannerAdUnit
+import com.google.android.gms.ads.mediation.MediationAdLoadCallback
+import com.google.android.gms.ads.mediation.MediationBannerAd
+import com.google.android.gms.ads.mediation.MediationBannerAdCallback
+import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration
 
-import androidx.annotation.NonNull;
-import com.criteo.publisher.CriteoBannerAdListener;
-import com.criteo.publisher.CriteoBannerView;
-import com.criteo.publisher.CriteoErrorCode;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
+class CriteoBannerEventLoader(
+    private val mediationBannerAdConfiguration: MediationBannerAdConfiguration,
+    private val mediationAdLoadCallback: MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>,
+    private val bannerAdUnit: BannerAdUnit
+) : CriteoBannerAdListener, MediationBannerAd {
 
-public class CriteoBannerEventListener implements CriteoBannerAdListener {
+    private lateinit var mediationBannerAdCallback: MediationBannerAdCallback
+    private lateinit var bannerView: CriteoBannerView
 
-    private final CustomEventBannerListener customEventBannerListener;
-
-    public CriteoBannerEventListener(CustomEventBannerListener listener) {
-        customEventBannerListener = listener;
+    fun loadAd() {
+        val criteoBanner = CriteoBannerView(mediationBannerAdConfiguration.context, bannerAdUnit)
+        criteoBanner.setCriteoBannerAdListener(this)
+        criteoBanner.loadAd()
     }
 
-    @Override
-    public void onAdReceived(@NonNull CriteoBannerView view) {
-        customEventBannerListener.onAdLoaded(view);
+    override fun onAdReceived(view: CriteoBannerView) {
+        bannerView = view
+        mediationBannerAdCallback = mediationAdLoadCallback.onSuccess(this)
+        mediationBannerAdCallback.reportAdImpression()
     }
 
-    @Override
-    public void onAdFailedToReceive(@NonNull CriteoErrorCode code) {
-        customEventBannerListener.onAdFailedToLoad(ErrorCode.toAdMob(code));
+    override fun onAdFailedToReceive(code: CriteoErrorCode) {
+        mediationAdLoadCallback.onFailure(code.toAdMobAdError())
     }
 
-    @Override
-    public void onAdLeftApplication() {
-        customEventBannerListener.onAdLeftApplication();
+    override fun onAdLeftApplication() {
+        mediationBannerAdCallback.onAdLeftApplication()
     }
 
-    @Override
-    public void onAdClicked() {
-        customEventBannerListener.onAdClicked();
+    override fun onAdClicked() {
+        mediationBannerAdCallback.onAdOpened()
+        mediationBannerAdCallback.reportAdClicked()
     }
 
+    override fun getView(): View {
+        return bannerView
+    }
 }

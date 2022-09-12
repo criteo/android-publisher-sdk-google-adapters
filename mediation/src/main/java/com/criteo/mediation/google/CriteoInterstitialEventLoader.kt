@@ -14,50 +14,58 @@
  *    limitations under the License.
  */
 
-package com.criteo.mediation.google;
+package com.criteo.mediation.google
 
+import android.content.Context
+import com.criteo.publisher.CriteoErrorCode
+import com.criteo.publisher.CriteoInterstitial
+import com.criteo.publisher.CriteoInterstitialAdListener
+import com.criteo.publisher.model.InterstitialAdUnit
+import com.google.android.gms.ads.mediation.MediationAdLoadCallback
+import com.google.android.gms.ads.mediation.MediationInterstitialAd
+import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback
 
-import androidx.annotation.NonNull;
-import com.criteo.publisher.CriteoErrorCode;
-import com.criteo.publisher.CriteoInterstitial;
-import com.criteo.publisher.CriteoInterstitialAdListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
+class CriteoInterstitialEventLoader(
+    private val mediationAdLoadCallback: MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>,
+    private val interstitialAdUnit: InterstitialAdUnit
+) : CriteoInterstitialAdListener, MediationInterstitialAd {
 
-public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener {
+    private lateinit var criteoInterstitial: CriteoInterstitial
+    private lateinit var mediationInterstitialAdCallback: MediationInterstitialAdCallback
 
-    private final CustomEventInterstitialListener customEventInterstitialListener;
-
-    public CriteoInterstitialEventListener(CustomEventInterstitialListener listener) {
-        customEventInterstitialListener = listener;
+    fun loadAd() {
+        val interstitialAd = CriteoInterstitial(interstitialAdUnit)
+        interstitialAd.setCriteoInterstitialAdListener(this)
+        interstitialAd.loadAd()
     }
 
-    @Override
-    public void onAdReceived(@NonNull CriteoInterstitial interstitial) {
-        customEventInterstitialListener.onAdLoaded();
+    override fun onAdReceived(interstitial: CriteoInterstitial) {
+        criteoInterstitial = interstitial
+        mediationInterstitialAdCallback = mediationAdLoadCallback.onSuccess(this)
     }
 
-    @Override
-    public void onAdFailedToReceive(CriteoErrorCode code) {
-        customEventInterstitialListener.onAdFailedToLoad(ErrorCode.toAdMob(code));
+    override fun onAdFailedToReceive(code: CriteoErrorCode) {
+        mediationAdLoadCallback.onFailure(code.toAdMobAdError())
     }
 
-    @Override
-    public void onAdOpened() {
-        customEventInterstitialListener.onAdOpened();
+    override fun onAdOpened() {
+        mediationInterstitialAdCallback.reportAdImpression()
+        mediationInterstitialAdCallback.onAdOpened()
     }
 
-    @Override
-    public void onAdClosed() {
-        customEventInterstitialListener.onAdClosed();
+    override fun onAdClosed() {
+        mediationInterstitialAdCallback.onAdClosed()
     }
 
-    @Override
-    public void onAdLeftApplication() {
-        customEventInterstitialListener.onAdLeftApplication();
+    override fun onAdLeftApplication() {
+        mediationInterstitialAdCallback.onAdLeftApplication()
     }
 
-    @Override
-    public void onAdClicked() {
-        customEventInterstitialListener.onAdClicked();
+    override fun onAdClicked() {
+        mediationInterstitialAdCallback.reportAdClicked()
+    }
+
+    override fun showAd(context: Context) {
+        criteoInterstitial.show()
     }
 }

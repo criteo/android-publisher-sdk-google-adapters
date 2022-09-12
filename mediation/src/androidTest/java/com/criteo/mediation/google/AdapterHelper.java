@@ -16,24 +16,34 @@
 
 package com.criteo.mediation.google;
 
+import static com.criteo.mediation.google.CriteoAdapter.SERVER_PARAMETER_KEY;
 import static com.criteo.publisher.CriteoUtil.TEST_CP_ID;
 import static com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+
 import com.criteo.publisher.model.AdSize;
 import com.criteo.publisher.model.AdUnit;
 import com.criteo.publisher.model.BannerAdUnit;
 import com.criteo.publisher.model.InterstitialAdUnit;
 import com.criteo.publisher.model.NativeAdUnit;
-import com.google.android.gms.ads.mediation.MediationAdRequest;
-import com.google.android.gms.ads.mediation.NativeMediationAdRequest;
-import com.google.android.gms.ads.mediation.customevent.CustomEventBannerListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventInterstitialListener;
-import com.google.android.gms.ads.mediation.customevent.CustomEventNativeListener;
+import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
+import com.google.android.gms.ads.mediation.MediationBannerAd;
+import com.google.android.gms.ads.mediation.MediationBannerAdCallback;
+import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration;
+import com.google.android.gms.ads.mediation.MediationInterstitialAd;
+import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback;
+import com.google.android.gms.ads.mediation.MediationInterstitialAdConfiguration;
+import com.google.android.gms.ads.mediation.MediationNativeAdCallback;
+import com.google.android.gms.ads.mediation.MediationNativeAdConfiguration;
+import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,82 +56,82 @@ public class AdapterHelper {
   private final Context context = ApplicationProvider.getApplicationContext();
 
   @NonNull
-  public final MediationAdRequest mediationAdRequest = mock(MediationAdRequest.class);
+  public final MediationBannerAdConfiguration mediationBannedAdConfiguration = mock(MediationBannerAdConfiguration.class);
 
   @NonNull
-  public final NativeMediationAdRequest nativeMediationAdRequest = mock(NativeMediationAdRequest.class);
+  public final MediationNativeAdConfiguration mediationNativeAdConfiguration = mock(MediationNativeAdConfiguration.class);
 
   @NonNull
-  private final Bundle customEventExtras = new Bundle();
+  public final MediationInterstitialAdConfiguration mediationInterstitialAdConfiguration = mock(MediationInterstitialAdConfiguration.class);
 
-  public void requestBannerAd(
+  public void loadBannerAd(
       @NonNull String serverParameters,
       @NonNull AdSize size,
-      @NonNull CustomEventBannerListener listener
+      @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback
   ) {
     com.google.android.gms.ads.AdSize adSize = new com.google.android.gms.ads.AdSize(
         size.getWidth(),
         size.getHeight()
     );
 
-    runOnMainThreadAndWait(() -> adapter.requestBannerAd(
-        context,
-        listener,
-        serverParameters,
-        adSize,
-        mediationAdRequest,
-        customEventExtras
+    when(mediationBannedAdConfiguration.getAdSize()).thenReturn(adSize);
+    when(mediationBannedAdConfiguration.getServerParameters()).thenReturn(bundleServerParameters(serverParameters));
+    when(mediationBannedAdConfiguration.getContext()).thenReturn(context);
+
+    runOnMainThreadAndWait(() -> adapter.loadBannerAd(
+            mediationBannedAdConfiguration,
+            callback
     ));
   }
 
-  public void requestBannerAd(
+  public void loadBannerAd(
       @NonNull BannerAdUnit adUnit,
-      @NonNull CustomEventBannerListener listener
+      @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback
   ) {
     String serverParameters = getServerParameters(adUnit);
-    requestBannerAd(serverParameters, adUnit.getSize(), listener);
+    loadBannerAd(serverParameters, adUnit.getSize(), callback);
   }
 
-  public void requestNativeAd(
+  public void loadNativeAd(
       @NonNull String serverParameters,
-      @NonNull CustomEventNativeListener listener
+      @NonNull MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback> callback
   ) {
-    runOnMainThreadAndWait(() -> adapter.requestNativeAd(
-        context,
-        listener,
-        serverParameters,
-        nativeMediationAdRequest,
-        customEventExtras
+    when(mediationNativeAdConfiguration.getServerParameters()).thenReturn(bundleServerParameters(serverParameters));
+    when(mediationNativeAdConfiguration.getContext()).thenReturn(context);
+
+    runOnMainThreadAndWait(() -> adapter.loadNativeAd(
+            mediationNativeAdConfiguration,
+            callback
     ));
   }
 
-  public void requestNativeAd(
+  public void loadNativeAd(
       @NonNull NativeAdUnit adUnit,
-      @NonNull CustomEventNativeListener listener
+      @NonNull MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback> callback
   ) {
     String serverParameters = getServerParameters(adUnit);
-    requestNativeAd(serverParameters, listener);
+    loadNativeAd(serverParameters, callback);
   }
 
-  public void requestInterstitialAd(
+  public void loadInterstitialAd(
       @NonNull String serverParameters,
-      @NonNull CustomEventInterstitialListener listener
+      @NonNull MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback> callback
   ) {
-    runOnMainThreadAndWait(() -> adapter.requestInterstitialAd(
-        context,
-        listener,
-        serverParameters,
-        mediationAdRequest,
-        customEventExtras
+    when(mediationInterstitialAdConfiguration.getServerParameters()).thenReturn(bundleServerParameters(serverParameters));
+    when(mediationInterstitialAdConfiguration.getContext()).thenReturn(context);
+
+    runOnMainThreadAndWait(() -> adapter.loadInterstitialAd(
+            mediationInterstitialAdConfiguration,
+            callback
     ));
   }
 
-  public void requestInterstitialAd(
+  public void loadInterstitialAd(
       @NonNull InterstitialAdUnit adUnit,
-      @NonNull CustomEventInterstitialListener listener
+      @NonNull MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback> callback
   ) {
     String serverParameters = getServerParameters(adUnit);
-    requestInterstitialAd(serverParameters, listener);
+    loadInterstitialAd(serverParameters, callback);
   }
 
   private static String getServerParameters(AdUnit adUnit) {
@@ -135,5 +145,9 @@ public class AdapterHelper {
     }
   }
 
-
+  private Bundle bundleServerParameters(String serverParameters) {
+    Bundle serverParametersBundle = new Bundle();
+    serverParametersBundle.putString(SERVER_PARAMETER_KEY, serverParameters);
+    return serverParametersBundle;
+  }
 }

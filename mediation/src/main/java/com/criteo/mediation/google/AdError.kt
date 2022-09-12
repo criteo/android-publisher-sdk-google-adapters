@@ -14,27 +14,51 @@
  *    limitations under the License.
  */
 
-package com.criteo.mediation.google;
+package com.criteo.mediation.google
 
-import androidx.annotation.NonNull;
-import com.criteo.publisher.CriteoErrorCode;
-import com.google.android.gms.ads.AdRequest;
+import com.criteo.publisher.CriteoErrorCode
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
 
-public class ErrorCode {
+internal const val ERROR_CODE_DOMAIN = BuildConfig.LIBRARY_PACKAGE_NAME
 
-  public static int toAdMob(@NonNull CriteoErrorCode code) {
-    switch (code) {
-      case ERROR_CODE_INTERNAL_ERROR:
-        return AdRequest.ERROR_CODE_INTERNAL_ERROR;
-      case ERROR_CODE_NETWORK_ERROR:
-        return AdRequest.ERROR_CODE_NETWORK_ERROR;
-      case ERROR_CODE_INVALID_REQUEST:
-        return AdRequest.ERROR_CODE_INVALID_REQUEST;
-      case ERROR_CODE_NO_FILL:
-        return AdRequest.ERROR_CODE_NO_FILL;
-      default:
-        throw new UnsupportedOperationException("Unknown Criteo error code: " + code);
-    }
+internal fun CriteoErrorCode.toAdMobAdError(): AdError {
+  return when (this) {
+    CriteoErrorCode.ERROR_CODE_NO_FILL -> AdError(
+      AdRequest.ERROR_CODE_NO_FILL,
+      "No fill",
+      ERROR_CODE_DOMAIN
+    )
+    CriteoErrorCode.ERROR_CODE_NETWORK_ERROR -> AdError(
+      AdRequest.ERROR_CODE_NETWORK_ERROR,
+      "Network error",
+      ERROR_CODE_DOMAIN
+    )
+    CriteoErrorCode.ERROR_CODE_INVALID_REQUEST -> AdError(
+      AdRequest.ERROR_CODE_INVALID_REQUEST,
+      "Invalid request",
+      ERROR_CODE_DOMAIN
+    )
+    CriteoErrorCode.ERROR_CODE_INTERNAL_ERROR -> AdError(
+      AdRequest.ERROR_CODE_INTERNAL_ERROR,
+      "Internal error",
+      ERROR_CODE_DOMAIN
+    )
+    else -> throw UnsupportedOperationException("Unknown Criteo error code: $this")
   }
-
 }
+
+internal fun emptyServerParameterError() =
+  AdError(AdRequest.ERROR_CODE_INVALID_REQUEST, "Server parameter was empty.", ERROR_CODE_DOMAIN)
+
+internal fun readingServerParameterError() =
+  AdError(
+    AdRequest.ERROR_CODE_INTERNAL_ERROR,
+    "Adapter failed to read server parameters",
+    ERROR_CODE_DOMAIN
+  )
+
+internal fun adapterInitializationError() =
+  AdError(AdRequest.ERROR_CODE_INTERNAL_ERROR, "Adapter failed to initialize", ERROR_CODE_DOMAIN)
+
+internal fun noFillError() = AdError(AdRequest.ERROR_CODE_NO_FILL, "No fill", ERROR_CODE_DOMAIN)

@@ -4,13 +4,15 @@ import com.criteo.publisher.TestAdUnits
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.network.PubSdkApi
-import com.google.android.gms.ads.mediation.MediationAdRequest
-import com.google.android.gms.ads.mediation.MediationAdRequest.*
-import com.google.android.gms.ads.mediation.NativeMediationAdRequest
-import com.nhaarman.mockitokotlin2.*
+import com.google.android.gms.ads.mediation.MediationAdConfiguration.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import org.mockito.kotlin.check
+import org.mockito.kotlin.mock
 
 class TagForChildDirectedTreatmentTest {
 
@@ -24,11 +26,11 @@ class TagForChildDirectedTreatmentTest {
     @Test
     fun loadBanner_GivenTagForChildDirectedTreatmentIsTrue_ShouldPassTrueToCdbRequest() {
         val adapterHelper = AdapterHelper()
-        whenever(adapterHelper.mediationAdRequest.taggedForChildDirectedTreatment()).thenReturn(
+        whenever(adapterHelper.mediationBannedAdConfiguration.taggedForChildDirectedTreatment()).thenReturn(
             TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
         )
 
-        adapterHelper.requestBannerAd(TestAdUnits.BANNER_320_480, mock())
+        adapterHelper.loadBannerAd(TestAdUnits.BANNER_320_480, mock())
         mockedDependenciesRule.waitForIdleState()
 
 
@@ -40,11 +42,11 @@ class TagForChildDirectedTreatmentTest {
     @Test
     fun loadBanner_GivenTagForChildDirectedTreatmentIsFalse_ShouldPassFalseToCdbRequest() {
         val adapterHelper = AdapterHelper()
-        whenever(adapterHelper.mediationAdRequest.taggedForChildDirectedTreatment()).thenReturn(
+        whenever(adapterHelper.mediationBannedAdConfiguration.taggedForChildDirectedTreatment()).thenReturn(
             TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE
         )
 
-        adapterHelper.requestBannerAd(TestAdUnits.BANNER_320_480, mock())
+        adapterHelper.loadBannerAd(TestAdUnits.BANNER_320_480, mock())
         mockedDependenciesRule.waitForIdleState()
 
 
@@ -56,11 +58,11 @@ class TagForChildDirectedTreatmentTest {
     @Test
     fun loadBanner_GivenTagForChildDirectedTreatmentIsUnspecified_ShouldPassNothingToCdbRequest() {
         val adapterHelper = AdapterHelper()
-        whenever(adapterHelper.mediationAdRequest.taggedForChildDirectedTreatment()).thenReturn(
+        whenever(adapterHelper.mediationBannedAdConfiguration.taggedForChildDirectedTreatment()).thenReturn(
             TAG_FOR_CHILD_DIRECTED_TREATMENT_UNSPECIFIED
         )
 
-        adapterHelper.requestBannerAd(TestAdUnits.BANNER_320_480, mock())
+        adapterHelper.loadBannerAd(TestAdUnits.BANNER_320_480, mock())
         mockedDependenciesRule.waitForIdleState()
 
 
@@ -72,11 +74,11 @@ class TagForChildDirectedTreatmentTest {
     @Test
     fun loadNative_GivenTagForChildDirectedTreatmentIsTrue_ShouldPassTrueToCdbRequest() {
         val adapterHelper = AdapterHelper()
-        whenever(adapterHelper.nativeMediationAdRequest.taggedForChildDirectedTreatment()).thenReturn(
+        whenever(adapterHelper.mediationNativeAdConfiguration.taggedForChildDirectedTreatment()).thenReturn(
             TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
         )
 
-        adapterHelper.requestNativeAd(TestAdUnits.NATIVE, mock())
+        adapterHelper.loadNativeAd(TestAdUnits.NATIVE, mock())
         mockedDependenciesRule.waitForIdleState()
 
 
@@ -88,11 +90,11 @@ class TagForChildDirectedTreatmentTest {
     @Test
     fun loadInterstitial_GivenTagForChildDirectedTreatmentIsFalse_ShouldPassFalseToCdbRequest() {
         val adapterHelper = AdapterHelper()
-        whenever(adapterHelper.mediationAdRequest.taggedForChildDirectedTreatment()).thenReturn(
+        whenever(adapterHelper.mediationBannedAdConfiguration.taggedForChildDirectedTreatment()).thenReturn(
             TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE
         )
 
-        adapterHelper.requestInterstitialAd(TestAdUnits.INTERSTITIAL, mock())
+        adapterHelper.loadInterstitialAd(TestAdUnits.INTERSTITIAL, mock())
         mockedDependenciesRule.waitForIdleState()
 
 
