@@ -37,25 +37,51 @@ jobs:
 
   android-tests:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api: '29'
+            abi: 'x86'
+            tag: 'google_apis'
+
+          - api: '30'
+            abi: 'x86'
+            tag: 'google_apis'
+
+          - api: '32'
+            abi: 'x86_64'
+            tag: 'playstore'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.0.8
-
-      - name: Run Android tests
-        uses: malinskiy/action-android/emulator-run-cmd@release/0.0.8
+      - name: Setup Java 11
+        uses: actions/setup-java@v2
         with:
-          api: 29
-          tag: google_apis
-          cmd: ./gradlew gordon
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Run all Android tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.tag }}
+          arch: ${{ matrix.abi }}
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -noaudio -no-boot-anim -skin 360x640
+          disable-animations: true
+          script: |
+            adb logcat -c # clear logs
+            mkdir artifacts && touch artifacts/logcat.log && chmod +w artifacts/logcat.log
+            adb logcat >> artifacts/logcat.log &
+            ./gradlew gordon
 
       - name: Upload logcat output
         uses: actions/upload-artifact@main
         if: failure()
         with:
-          name: logcat
+          name: logcat-${{ matrix.api }}
           path: artifacts/logcat.log
 
       - name: Junit Report to Annotations
@@ -63,14 +89,13 @@ jobs:
         if: failure()
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
-          path: "**/test-results/**/*.xml"
-          name: "Android JUnit Report"
+          name: "Android JUnit Report (API ${{ matrix.api }})"
 
       - name: Upload JUnit report
         uses: actions/upload-artifact@main
         if: failure()
         with:
-          name: junit-report
+          name: junit-report-${{ matrix.api }}
           path: "**/build/reports"
 
   deploy-development-artifacts:
