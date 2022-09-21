@@ -148,7 +148,7 @@ class CriteoNativeAdapterTest {
       layout.addView(createTextView(context, ADVERTISER_DOMAIN_TAG, it.extras["crtn_advdomain"] as String?))
       layout.addView(createTextView(context, ADVERTISER_DESCRIPTION_TAG, it.advertiser))
       layout.addView(adView.createMediaView(context, it.mediaContent))
-      layout.addView(createImageView(context, ADVERTISER_LOGO_TAG, it.icon.drawable))
+      layout.addView(createImageView(context, ADVERTISER_LOGO_TAG, it.icon?.drawable))
 
       adView.addView(layout)
       adView.setNativeAd(it)
@@ -182,7 +182,7 @@ class CriteoNativeAdapterTest {
     adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
 
     // Images
-    assertThat(adView.mediaView.findDrawable()).isNotNull
+    assertThat(adView.mediaView?.findDrawable()).isNotNull
     assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isNotNull.satisfies {
       assertThat(it?.intrinsicWidth).isGreaterThan(0)
       assertThat(it?.intrinsicHeight).isGreaterThan(0)
@@ -255,10 +255,12 @@ class CriteoNativeAdapterTest {
     return view
   }
 
-  private fun NativeAdView.createMediaView(context: Context, mediaContent: MediaContent): MediaView {
+  private fun NativeAdView.createMediaView(context: Context, mediaContent: MediaContent?): MediaView {
     val view = MediaView(context)
     mediaView = view
-    view.setMediaContent(mediaContent)
+    mediaContent?.let {
+      view.setMediaContent(it)
+    }
     return view
   }
 
