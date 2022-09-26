@@ -4,8 +4,12 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next
+
+
+## Version 4.8.0.0
 * Bump AdMob to v21.2.0
 * Add support of Android 12L (API level 32)
+* Bump minSdkVersion to 19
 
 ## Version 4.7.0.0
 * Automatically pass COPPA flag from Google SDK to Criteo SDK.
