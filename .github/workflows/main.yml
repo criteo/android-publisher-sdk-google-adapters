@@ -49,7 +49,13 @@ jobs:
             abi: 'x86'
             tag: 'google_apis'
 
-          - api: '32'
+          - api: '31'
+            abi: 'x86_64'
+            tag: 'google_apis'
+
+          # api 32 is an interim release of Android without api changes, so it is skipped here
+
+          - api: '33'
             abi: 'x86_64'
             tag: 'playstore'
     steps:

@@ -27,11 +27,11 @@ plugins {
 gordon.retryQuota = 3
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionCode 1
         versionName "$adapter_version"
         multiDexEnabled true
