@@ -4,6 +4,8 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next
+
+## Version 4.9.0.0
 * Add support of Android 13 (API level 33)
 
 ## Version 4.8.0.0
