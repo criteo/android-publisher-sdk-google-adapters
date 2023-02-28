@@ -5,6 +5,9 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 
 ## Next
 
+## Version 4.9.2.0
+* No changes on the adapter.
+
 ## Version 4.9.1.0
 * Add support of Android 13 (API level 33)
 
