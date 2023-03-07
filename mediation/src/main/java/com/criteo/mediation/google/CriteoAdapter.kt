@@ -200,6 +200,12 @@ class CriteoAdapter : Adapter() {
                 Log.e(TAG, error.message, e)
                 return false
             }
+            // Try again after Criteo instance initialized successfully
+            try {
+                Criteo.getInstance().setTagForChildDirectedTreatment(tagForChildDirectedTreatment)
+                return true
+            } catch (ignored: Exception) {
+            }
             listener.onFailure(noFillError())
             return false
         }
