@@ -88,7 +88,7 @@ dependencies {
 
     compileOnly("androidx.annotation:annotation:1.0.0")
 
-    compileOnly("com.google.android.gms:play-services-ads:21.2.0") {
+    compileOnly("com.google.android.gms:play-services-ads:22.1.0") {
         exclude(group: "com.android.support")
     }
 
@@ -103,7 +103,7 @@ dependencies {
     testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_dev_dynamic_version") {
         exclude(group: "com.android.support")
     }
-    testImplementation("com.google.android.gms:play-services-ads:21.2.0") {
+    testImplementation("com.google.android.gms:play-services-ads:22.1.0") {
         exclude(group: "com.android.support")
     }
     testImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_dev_dynamic_version")
@@ -120,7 +120,7 @@ dependencies {
     androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_dev_dynamic_version") {
         exclude(group: "com.android.support")
     }
-    androidTestImplementation("com.google.android.gms:play-services-ads:21.2.0") {
+    androidTestImplementation("com.google.android.gms:play-services-ads:22.1.0") {
         exclude(group: "com.android.support")
     }
 }
