@@ -63,6 +63,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.spy
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.eq
 import java.net.URI
 import java.net.URL
 import java.security.MessageDigest

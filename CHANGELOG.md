@@ -4,6 +4,7 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next
+* Bump AdMob to v22.1.0
 
 ## Version 4.9.2.0
 * No changes on the adapter.
