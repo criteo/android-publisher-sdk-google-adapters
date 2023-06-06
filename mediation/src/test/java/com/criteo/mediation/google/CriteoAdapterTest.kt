@@ -17,11 +17,14 @@
 package com.criteo.mediation.google
 
 import com.criteo.publisher.Criteo
+import com.google.android.gms.ads.mediation.InitializationCompleteCallback
 import com.google.android.gms.ads.mediation.VersionInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 
 class CriteoAdapterTest {
 
@@ -108,5 +111,14 @@ class CriteoAdapterTest {
 
             assertThat(actualVersionInfo.isEqualTo(CriteoAdapter.DEFAULT_VERSION_INFO)).isTrue
         }
+    }
+
+    @Test
+    fun initialize_shouldCallOnInitializationSucceededOnInitializationCompleteCallback() {
+        val initializationCompleteCallback: InitializationCompleteCallback = mock()
+
+        adapter.initialize(mock(), initializationCompleteCallback, mock())
+
+        verify(initializationCompleteCallback).onInitializationSucceeded()
     }
 }

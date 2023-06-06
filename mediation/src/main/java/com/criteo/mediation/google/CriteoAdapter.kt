@@ -112,7 +112,7 @@ class CriteoAdapter : Adapter() {
         initializationCompleteCallback: InitializationCompleteCallback,
         list: MutableList<MediationConfiguration>
     ) {
-        // This method is not called for custom events
+        initializationCompleteCallback.onInitializationSucceeded()
     }
 
     override fun getVersionInfo(): VersionInfo {
