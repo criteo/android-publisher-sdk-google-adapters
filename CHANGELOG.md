@@ -5,6 +5,9 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 
 ## Next
 
+## Version 5.0.1.0
+* Downgrade kotlin to 1.5.31
+
 ## Version 5.0.0.0
 * Bump AdMob to v22.1.0
 
