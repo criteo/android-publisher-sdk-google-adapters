@@ -36,9 +36,9 @@ class CriteoBannerEventLoader(
     private lateinit var bannerView: CriteoBannerView
 
     fun loadAd() {
-        val criteoBanner = CriteoBannerView(mediationBannerAdConfiguration.context, bannerAdUnit)
-        criteoBanner.setCriteoBannerAdListener(this)
-        criteoBanner.loadAd()
+        bannerView = CriteoBannerView(mediationBannerAdConfiguration.context, bannerAdUnit)
+        bannerView.setCriteoBannerAdListener(this)
+        bannerView.loadAd()
     }
 
     override fun onAdReceived(view: CriteoBannerView) {
