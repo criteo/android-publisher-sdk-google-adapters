@@ -4,6 +4,7 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next
+* Fix `NullPointerException` when loading a banner
 
 ## Version 5.0.1.0
 * Downgrade kotlin to 1.5.31
