@@ -4,6 +4,8 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next
+
+## Version 5.0.2.0
 * Fix `NullPointerException` when loading a banner
 
 ## Version 5.0.1.0
