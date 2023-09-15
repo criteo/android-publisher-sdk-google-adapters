@@ -5,6 +5,9 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 
 ## Next
 
+## Version 5.0.3.0
+* No changes on the adapter.
+
 ## Version 5.0.2.0
 * Fix `NullPointerException` when loading a banner
 
