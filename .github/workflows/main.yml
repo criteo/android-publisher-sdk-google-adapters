@@ -41,10 +41,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - api: '29'
-            abi: 'x86'
-            tag: 'google_apis'
-
           - api: '30'
             abi: 'x86'
             tag: 'google_apis'
@@ -58,6 +54,10 @@ jobs:
           - api: '33'
             abi: 'x86_64'
             tag: 'playstore'
+
+          - api: '34'
+            abi: 'x86_64'
+            tag: 'google_apis'
     steps:
       - name: Checkout
         uses: actions/checkout@v3

@@ -20,12 +20,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.provider.Settings
-import android.provider.Settings.Secure
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.rule.ActivityTestRule
 import com.criteo.mediation.google.activity.DummyActivity
 import com.criteo.mediation.google.advancednative.CriteoNativeEventLoader;
 import com.criteo.publisher.BidListener
@@ -92,7 +92,7 @@ class CriteoNativeAdapterTest {
 
   @Rule
   @JvmField
-  var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
+  var testRule: ActivityTestRule<DummyActivity> = ActivityTestRule(DummyActivity::class.java)
 
   @Inject
   private lateinit var context: Context
@@ -298,8 +298,8 @@ class CriteoNativeAdapterTest {
     mockedDependenciesRule.waitForIdleState()
 
     var expectedComponentName: ComponentName? = null
-    scenarioRule.scenario.onActivity {
-      expectedComponentName = it.componentName
+    testRule.runOnUiThread {
+      expectedComponentName = testRule.activity.componentName
     }
 
     verify(redirection).redirect(
@@ -315,8 +315,8 @@ class CriteoNativeAdapterTest {
   private fun View.assertDisplayTriggerImpressionPixels(expectedPixels: List<URL>) {
     clearInvocations(adListener)
 
-    scenarioRule.scenario.onActivity {
-      it.setContentView(this)
+    testRule.runOnUiThread {
+      testRule.activity.setContentView(this)
     }
     mockedDependenciesRule.waitForIdleState()
 
