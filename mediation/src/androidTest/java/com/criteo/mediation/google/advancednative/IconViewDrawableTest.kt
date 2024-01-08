@@ -18,7 +18,7 @@ package com.criteo.mediation.google.advancednative
 
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
-import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.rule.ActivityTestRule
 import com.criteo.mediation.google.activity.DummyActivity
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.concurrent.ThreadingUtil.waitForMessageQueueToBeIdle
@@ -30,7 +30,7 @@ class IconViewDrawableTest {
 
   @Rule
   @JvmField
-  var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
+  var testRule: ActivityTestRule<DummyActivity> = ActivityTestRule(DummyActivity::class.java)
 
   @Test
   fun setImageDrawable_GivenDifferentDrawables_UpdateAccordingly() {
@@ -39,20 +39,22 @@ class IconViewDrawableTest {
     lateinit var delegateImageView: ImageView
     lateinit var displayedImageView: ImageView
 
-    scenarioRule.scenario.onActivity {
-      drawable1  = it.getDrawable(android.R.drawable.ic_delete)!!
-      drawable2  = it.getDrawable(android.R.drawable.ic_secure)!!
+    testRule.runOnUiThread {
+      val activity = testRule.activity
+      drawable1  = activity.getDrawable(android.R.drawable.ic_delete)!!
+      drawable2  = activity.getDrawable(android.R.drawable.ic_secure)!!
       assertThat(drawable1.intrinsicWidth).isNotEqualTo(drawable2.intrinsicWidth)
 
-      delegateImageView = ImageView(it)
-      displayedImageView = ImageView(it)
+      delegateImageView = ImageView(activity)
+      displayedImageView = ImageView(activity)
     }
 
     val drawable = IconViewDrawable(delegateImageView)
 
-    scenarioRule.scenario.onActivity {
+    testRule.runOnUiThread {
+      val activity = testRule.activity
       displayedImageView.setImageDrawable(drawable)
-      it.setContentView(displayedImageView)
+      activity.setContentView(displayedImageView)
     }
 
     assertThat(drawable.intrinsicWidth)
@@ -82,5 +84,4 @@ class IconViewDrawableTest {
     // At this point, the update step might be running. We must wait for it.
     waitForMessageQueueToBeIdle()
   }
-
 }

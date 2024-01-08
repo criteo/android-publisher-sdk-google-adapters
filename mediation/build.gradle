@@ -27,11 +27,11 @@ plugins {
 gordon.retryQuota = 3
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode 1
         versionName "$adapter_version"
         multiDexEnabled true
@@ -97,8 +97,8 @@ dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:4.0.0")
-    testImplementation("org.mockito:mockito-inline:4.0.0")
+    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     testImplementation("org.assertj:assertj-core:3.19.0")
@@ -110,12 +110,12 @@ dependencies {
     }
     testImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_dev_dynamic_version")
 
-    androidTestImplementation("androidx.test:runner:1.4.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:core:1.4.0")
-    androidTestImplementation("androidx.test:rules:1.4.0")
+    androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.legacy:legacy-support-core-utils:1.0.0")
-    androidTestImplementation("org.mockito:mockito-android:3.9.0")
+    androidTestImplementation("org.mockito:mockito-android:5.8.0")
     androidTestImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     androidTestImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
     androidTestImplementation("org.assertj:assertj-core:3.19.0")
